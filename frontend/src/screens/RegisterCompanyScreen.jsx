@@ -15,6 +15,7 @@ const RegisterCompanyScreen = () => {
   const [companyName, setCompanyName] = useState('');
   const [companyLogo, setCompanyLogo] = useState('');
   const [companyDescription, setCompanyDescription] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState(null);
   const [step, setStep] = useState(1);
@@ -50,7 +51,7 @@ const RegisterCompanyScreen = () => {
 
   const submitHandler = (e) => {
     e.preventDefault();
-    
+
     if (step === 1) {
       nextStep();
     } else {
@@ -61,6 +62,7 @@ const RegisterCompanyScreen = () => {
           name,
           email,
           password,
+          phoneNumber,
           companyName,
           companyLogo,
           companyDescription
@@ -77,29 +79,27 @@ const RegisterCompanyScreen = () => {
     <FormContainer>
       <div className="bg-white p-8 rounded-lg shadow-md">
         <h1 className="text-3xl font-bold text-center mb-6">Register Company</h1>
-        
+
         {message && <Message variant="error">{message}</Message>}
         {error && <Message variant="error">{error}</Message>}
-        
+
         <div className="mb-6">
           <div className="flex justify-between">
-            <div 
-              className={`w-1/2 p-2 text-center ${
-                step === 1 ? 'bg-blue-600 text-white' : 'bg-gray-200'
-              } rounded-l-lg`}
+            <div
+              className={`w-1/2 p-2 text-center ${step === 1 ? 'bg-blue-600 text-white' : 'bg-gray-200'
+                } rounded-l-lg`}
             >
               <span className="font-medium">Account Info</span>
             </div>
-            <div 
-              className={`w-1/2 p-2 text-center ${
-                step === 2 ? 'bg-blue-600 text-white' : 'bg-gray-200'
-              } rounded-r-lg`}
+            <div
+              className={`w-1/2 p-2 text-center ${step === 2 ? 'bg-blue-600 text-white' : 'bg-gray-200'
+                } rounded-r-lg`}
             >
               <span className="font-medium">Company Details</span>
             </div>
           </div>
         </div>
-        
+
         <form onSubmit={submitHandler}>
           {step === 1 ? (
             <>
@@ -111,7 +111,7 @@ const RegisterCompanyScreen = () => {
                 <input
                   type="text"
                   id="name"
-                  className="input"
+                  className="form-input"
                   placeholder="Enter admin name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -127,10 +127,26 @@ const RegisterCompanyScreen = () => {
                 <input
                   type="email"
                   id="email"
-                  className="input"
+                  className="form-input"
                   placeholder="Enter company email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="mb-4">
+                <label htmlFor="phoneNumber" className="block text-gray-700 mb-2">
+                  <FontAwesomeIcon icon="phone" className="mr-2" />
+                  Phone Number
+                </label>
+                <input
+                  type="text"
+                  id="phoneNumber"
+                  className="form-input"
+                  placeholder="Enter contact number"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                   required
                 />
               </div>
@@ -168,7 +184,7 @@ const RegisterCompanyScreen = () => {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="confirmPassword"
-                  className="input"
+                  className="form-input"
                   placeholder="Confirm password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -195,7 +211,7 @@ const RegisterCompanyScreen = () => {
                 <input
                   type="text"
                   id="companyName"
-                  className="input"
+                  className="form-input"
                   placeholder="Enter company name"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
@@ -211,7 +227,7 @@ const RegisterCompanyScreen = () => {
                 <input
                   type="url"
                   id="companyLogo"
-                  className="input"
+                  className="form-input"
                   placeholder="Enter logo URL"
                   value={companyLogo}
                   onChange={(e) => setCompanyLogo(e.target.value)}
@@ -225,7 +241,7 @@ const RegisterCompanyScreen = () => {
                 </label>
                 <textarea
                   id="companyDescription"
-                  className="input"
+                  className="form-input"
                   placeholder="Enter company description"
                   value={companyDescription}
                   onChange={(e) => setCompanyDescription(e.target.value)}
@@ -242,7 +258,7 @@ const RegisterCompanyScreen = () => {
                   <FontAwesomeIcon icon="arrow-left" className="mr-2" />
                   Back
                 </button>
-                
+
                 <button
                   type="submit"
                   className="btn btn-primary w-1/2 py-3"

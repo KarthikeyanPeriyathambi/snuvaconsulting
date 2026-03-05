@@ -16,6 +16,10 @@ import {
   JOB_DELETE_REQUEST,
   JOB_DELETE_SUCCESS,
   JOB_DELETE_FAIL,
+  JOB_APPLICATION_CREATE_REQUEST,
+  JOB_APPLICATION_CREATE_SUCCESS,
+  JOB_APPLICATION_CREATE_FAIL,
+  JOB_APPLICATION_CREATE_RESET,
 } from '../constants/jobConstants';
 
 export const jobListReducer = (state = { jobs: [] }, action) => {
@@ -23,9 +27,11 @@ export const jobListReducer = (state = { jobs: [] }, action) => {
     case JOB_LIST_REQUEST:
       return { loading: true, jobs: [] };
     case JOB_LIST_SUCCESS:
-      return { 
-        loading: false, 
-        jobs: Array.isArray(action.payload) ? action.payload : [] 
+      return {
+        loading: false,
+        jobs: action.payload.jobs || [],
+        pages: action.payload.pages,
+        page: action.payload.page,
       };
     case JOB_LIST_FAIL:
       return { loading: false, error: action.payload };
@@ -85,6 +91,21 @@ export const jobDeleteReducer = (state = {}, action) => {
       return { loading: false, success: true };
     case JOB_DELETE_FAIL:
       return { loading: false, error: action.payload };
+    default:
+      return state;
+  }
+};
+
+export const jobApplicationCreateReducer = (state = {}, action) => {
+  switch (action.type) {
+    case JOB_APPLICATION_CREATE_REQUEST:
+      return { loading: true };
+    case JOB_APPLICATION_CREATE_SUCCESS:
+      return { loading: false, success: true, application: action.payload };
+    case JOB_APPLICATION_CREATE_FAIL:
+      return { loading: false, error: action.payload };
+    case JOB_APPLICATION_CREATE_RESET:
+      return {};
     default:
       return state;
   }

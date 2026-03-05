@@ -10,45 +10,48 @@ const JobDetailScreen = () => {
   const { id: jobId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
   const [showFullDescription, setShowFullDescription] = useState(false);
-  
+
   const jobDetails = useSelector((state) => state.jobDetails);
   const { loading, error, job } = jobDetails;
-  
+
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo } = userLogin;
-  
+
   const resumeUpload = useSelector((state) => state.resumeUpload);
   const { resume } = resumeUpload;
-  
+
   useEffect(() => {
     if (!job._id || job._id !== jobId) {
       dispatch(getJobDetails(jobId));
     }
   }, [dispatch, job._id, jobId]);
-  
+
   const applyHandler = () => {
     if (!userInfo) {
-      navigate('/login?redirect=upload-resume');
+      navigate(`/login?redirect=upload-resume?jobId=${jobId}%26jobTitle=${encodeURIComponent(job.title || '')}`);
     } else if (resume) {
+      // Already have a resume — go straight to chatbot but update the job association
       navigate(`/chatbot/${resume._id}/${jobId}`);
     } else {
-      navigate('/upload-resume');
+      // Send jobId and jobTitle so ResumeUploadScreen can store them
+      navigate(`/upload-resume?jobId=${jobId}&jobTitle=${encodeURIComponent(job.title || '')}`);
     }
   };
-  
+
+
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
   };
-  
+
   return (
     <div className="container mx-auto px-4 py-8">
       <Link to="/jobs" className="flex items-center text-blue-600 hover:text-blue-800 mb-6">
         <FontAwesomeIcon icon="arrow-left" className="mr-2" />
         Back to Jobs
       </Link>
-      
+
       {loading ? (
         <Loader />
       ) : error ? (
@@ -65,7 +68,7 @@ const JobDetailScreen = () => {
                     {job.admin && job.admin.companyName}
                   </p>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-3 mb-6">
                   <span className="badge badge-primary">
                     <FontAwesomeIcon icon="briefcase" className="mr-1" />
@@ -80,7 +83,7 @@ const JobDetailScreen = () => {
                     {new Date(job.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   <div className="flex items-start">
                     <FontAwesomeIcon icon="map-marker-alt" className="text-gray-500 mt-1 mr-3" />
@@ -89,7 +92,7 @@ const JobDetailScreen = () => {
                       <p className="text-gray-700">{job.location}</p>
                     </div>
                   </div>
-                  
+
                   {job.salary && (
                     <div className="flex items-start">
                       <FontAwesomeIcon icon="money-bill-wave" className="text-gray-500 mt-1 mr-3" />
@@ -99,7 +102,7 @@ const JobDetailScreen = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="flex items-start">
                     <FontAwesomeIcon icon="users" className="text-gray-500 mt-1 mr-3" />
                     <div>
@@ -108,40 +111,40 @@ const JobDetailScreen = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="mb-8">
                   <h2 className="text-xl font-semibold mb-3">Job Description</h2>
                   <div className={`prose text-gray-700 ${!showFullDescription && 'max-h-60 overflow-hidden relative'}`}>
                     <p>{job.description}</p>
-                    {!showFullDescription && job.description.length > 300 && (
+                    {!showFullDescription && job.description && job.description.length > 300 && (
                       <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent"></div>
                     )}
                   </div>
-                  {job.description.length > 300 && (
+                  {job.description && job.description.length > 300 && (
                     <button
                       onClick={toggleDescription}
                       className="text-blue-600 hover:text-blue-800 mt-2 font-medium focus:outline-none"
                     >
                       {showFullDescription ? 'Show Less' : 'Read More'}
-                      <FontAwesomeIcon 
-                        icon={showFullDescription ? 'chevron-up' : 'chevron-down'} 
-                        className="ml-1" 
+                      <FontAwesomeIcon
+                        icon={showFullDescription ? 'chevron-up' : 'chevron-down'}
+                        className="ml-1"
                       />
                     </button>
                   )}
                 </div>
-                
+
                 <div className="mb-8">
                   <h2 className="text-xl font-semibold mb-3">Required Skills</h2>
                   <div className="flex flex-wrap gap-2">
-                    {job.requiredSkills.map((skill, index) => (
+                    {job.requiredSkills && job.requiredSkills.map((skill, index) => (
                       <span key={index} className="badge badge-accent py-2 px-3">
                         {skill}
                       </span>
                     ))}
                   </div>
                 </div>
-                
+
                 {job.jobRequirements && job.jobRequirements.length > 0 && (
                   <div className="mb-8">
                     <h2 className="text-xl font-semibold mb-3">Job Requirements</h2>
@@ -155,7 +158,7 @@ const JobDetailScreen = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Company Info & Application */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
@@ -165,9 +168,9 @@ const JobDetailScreen = () => {
                   <>
                     <div className="flex items-center mb-4">
                       {job.admin.companyLogo ? (
-                        <img 
-                          src={job.admin.companyLogo} 
-                          alt={job.admin.companyName} 
+                        <img
+                          src={job.admin.companyLogo}
+                          alt={job.admin.companyName}
                           className="w-16 h-16 object-contain rounded mr-4"
                         />
                       ) : (
@@ -179,7 +182,7 @@ const JobDetailScreen = () => {
                         <h3 className="font-semibold text-lg">{job.admin.companyName}</h3>
                       </div>
                     </div>
-                    
+
                     {job.admin.companyDescription && (
                       <p className="text-gray-700 mb-4">{job.admin.companyDescription}</p>
                     )}
@@ -187,14 +190,14 @@ const JobDetailScreen = () => {
                 )}
               </div>
             </div>
-            
+
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="p-6">
                 <h2 className="text-xl font-semibold mb-4">Apply for this job</h2>
                 <p className="text-gray-700 mb-6">
                   To apply for this position, you'll need to upload your resume and answer a few questions.
                 </p>
-                
+
                 <button
                   onClick={applyHandler}
                   className="btn btn-primary w-full py-3"

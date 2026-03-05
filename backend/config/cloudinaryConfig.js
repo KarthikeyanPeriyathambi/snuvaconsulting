@@ -12,24 +12,27 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Set up storage for resume uploads
+// Set up storage for Cloudinary uploads
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: 'resumes',
     resource_type: 'raw',
-    allowed_formats: ['pdf', 'docx'],
-    public_id: (req, file) => `${Date.now()}-${file.originalname}`,
+    public_id: (req, file) => {
+      // Remove spaces and special characters to prevent signature errors
+      const cleanFileName = file.originalname.replace(/[^a-zA-Z0-9_.-]/g, '_');
+      return `${Date.now()}_${cleanFileName}`;
+    },
   },
 });
 
-// Set up multer for handling file uploads
+// Set up multer for handling file uploads with memory storage to access buffer
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(), // Store file in memory to access buffer
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf' || 
-        file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    if (file.mimetype === 'application/pdf' ||
+      file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
       cb(null, true);
     } else {
       cb(new Error('Only PDF and DOCX files are allowed!'), false);
@@ -37,4 +40,4 @@ const upload = multer({
   },
 });
 
-export { cloudinary, upload };
+export { cloudinary, upload, storage };

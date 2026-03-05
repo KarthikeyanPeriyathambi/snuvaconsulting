@@ -23,7 +23,7 @@ const userSchema = mongoose.Schema(
     },
     companyName: {
       type: String,
-      required: function() {
+      required: function () {
         return this.isAdmin === true;
       },
     },
@@ -31,6 +31,9 @@ const userSchema = mongoose.Schema(
       type: String,
     },
     companyDescription: {
+      type: String,
+    },
+    phoneNumber: {
       type: String,
     },
   },

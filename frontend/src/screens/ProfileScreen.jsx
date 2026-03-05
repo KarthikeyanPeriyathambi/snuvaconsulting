@@ -11,36 +11,38 @@ const ProfileScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [message, setMessage] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const dispatch = useDispatch();
-  
+
   const userDetails = useSelector((state) => state.userDetails);
   const { loading, error, user } = userDetails;
-  
+
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo } = userLogin;
-  
+
   const userUpdateProfile = useSelector((state) => state.userUpdateProfile);
   const { success } = userUpdateProfile;
-  
+
   useEffect(() => {
     if (!userInfo) {
       return;
     }
-    
+
     if (!user || !user.name || success) {
       dispatch(getUserDetails());
     } else {
       setName(user.name);
       setEmail(user.email);
+      setPhoneNumber(user.phoneNumber || '');
     }
   }, [dispatch, userInfo, user, success]);
-  
+
   const submitHandler = (e) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       setMessage('Passwords do not match');
       toast.error('Passwords do not match');
@@ -51,6 +53,7 @@ const ProfileScreen = () => {
           id: user._id,
           name,
           email,
+          phoneNumber,
           password: password ? password : undefined,
         })
       );
@@ -59,11 +62,11 @@ const ProfileScreen = () => {
       setConfirmPassword('');
     }
   };
-  
+
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-  
+
   return (
     <div className="bg-gray-50 min-h-screen py-12">
       <div className="container mx-auto px-4">
@@ -79,7 +82,7 @@ const ProfileScreen = () => {
                   <h2 className="text-xl font-bold text-gray-900">{user?.name || 'User'}</h2>
                   <p className="text-gray-600">{user?.email || 'user@example.com'}</p>
                 </div>
-                
+
                 <nav className="space-y-1">
                   <a href="#profile" className="flex items-center px-3 py-2 text-primary-600 bg-primary-50 rounded-lg font-medium">
                     <FontAwesomeIcon icon="user-circle" className="mr-3" />
@@ -99,11 +102,11 @@ const ProfileScreen = () => {
                   </a>
                 </nav>
               </div>
-              
+
               {/* Main Content */}
               <div className="w-full md:w-2/3 p-6">
                 <h1 className="text-2xl font-bold mb-6 text-gray-900 pb-2 border-b border-gray-100">Personal Information</h1>
-                
+
                 {loading ? (
                   <Loader />
                 ) : error ? (
@@ -112,7 +115,7 @@ const ProfileScreen = () => {
                   <>
                     {message && <Message variant="error">{message}</Message>}
                     {success && <Message variant="success">Profile Updated Successfully</Message>}
-                    
+
                     <form onSubmit={submitHandler} className="space-y-6">
                       <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
@@ -128,7 +131,7 @@ const ProfileScreen = () => {
                           required
                         />
                       </div>
-                      
+
                       <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                           <FontAwesomeIcon icon="envelope" className="mr-2 text-primary-500" />
@@ -137,13 +140,27 @@ const ProfileScreen = () => {
                         <input
                           type="email"
                           id="email"
-                          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                          className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed transition-colors"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          required
+                          disabled
                         />
                       </div>
-                      
+
+                      <div>
+                        <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                          <FontAwesomeIcon icon="phone" className="mr-2 text-primary-500" />
+                          Phone Number
+                        </label>
+                        <input
+                          type="text"
+                          id="phoneNumber"
+                          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                        />
+                      </div>
+
                       <div>
                         <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                           <FontAwesomeIcon icon="lock" className="mr-2 text-primary-500" />
@@ -167,7 +184,7 @@ const ProfileScreen = () => {
                           </button>
                         </div>
                       </div>
-                      
+
                       <div>
                         <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                           <FontAwesomeIcon icon="lock" className="mr-2 text-primary-500" />
@@ -184,7 +201,7 @@ const ProfileScreen = () => {
                           />
                         </div>
                       </div>
-                      
+
                       <button type="submit" className="w-full px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors duration-300 flex items-center justify-center">
                         <FontAwesomeIcon icon="save" className="mr-2" />
                         Update Profile

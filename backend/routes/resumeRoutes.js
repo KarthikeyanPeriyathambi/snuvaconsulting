@@ -4,18 +4,22 @@ import {
   addChatbotResponse,
   getResumeById,
   getUserResumes,
+  serveResumeFile,
 } from '../controllers/resumeController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, optionalProtect } from '../middleware/authMiddleware.js';
 import { upload } from '../config/cloudinaryConfig.js';
 
 const router = express.Router();
 
 router.route('/')
-  .post(upload.single('resume'), uploadResume)
+  .post(optionalProtect, upload.single('resume'), uploadResume)
   .get(protect, getUserResumes);
 
 router.route('/:id')
   .get(getResumeById);
+
+router.route('/:id/file')
+  .get(protect, serveResumeFile);
 
 router.route('/:id/chatbot-response')
   .post(addChatbotResponse);

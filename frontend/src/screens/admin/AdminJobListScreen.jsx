@@ -2,54 +2,55 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { getAdminJobs, deleteJob } from '../../actions/adminActions';
+import { getAdminJobs } from '../../actions/adminActions';
+import { deleteJob } from '../../actions/jobActions';
 import Loader from '../../components/common/Loader';
 import Message from '../../components/common/Message';
 
 const AdminJobListScreen = () => {
   const dispatch = useDispatch();
-  
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteJobId, setDeleteJobId] = useState(null);
-  
+
   const adminJobs = useSelector((state) => state.adminJobs);
   const { loading, error, jobs } = adminJobs;
-  
+
   const jobDelete = useSelector((state) => state.jobDelete);
   const { loading: deleteLoading, error: deleteError, success: deleteSuccess } = jobDelete;
-  
+
   useEffect(() => {
     dispatch(getAdminJobs());
   }, [dispatch, deleteSuccess]);
-  
+
   const openDeleteModal = (id) => {
     setDeleteJobId(id);
     setShowDeleteModal(true);
   };
-  
+
   const closeDeleteModal = () => {
     setShowDeleteModal(false);
     setDeleteJobId(null);
   };
-  
+
   const confirmDelete = () => {
     dispatch(deleteJob(deleteJobId));
     closeDeleteModal();
   };
-  
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <h1 className="text-3xl font-bold mb-4 md:mb-0">Manage Jobs</h1>
-        
+
         <Link to="/admin/jobs/create" className="btn btn-primary">
           <FontAwesomeIcon icon="plus" className="mr-2" />
           Post New Job
         </Link>
       </div>
-      
+
       {deleteError && <Message variant="error">{deleteError}</Message>}
-      
+
       {loading ? (
         <Loader />
       ) : error ? (
@@ -116,9 +117,8 @@ const AdminJobListScreen = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        job.status === 'Open' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${job.status === 'Open' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
                         {job.status}
                       </span>
                     </td>
@@ -155,14 +155,14 @@ const AdminJobListScreen = () => {
           </div>
         </div>
       )}
-      
+
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Confirm Deletion</h2>
             <p className="mb-6">Are you sure you want to delete this job posting? This action cannot be undone.</p>
-            
+
             <div className="flex justify-end gap-4">
               <button
                 onClick={closeDeleteModal}

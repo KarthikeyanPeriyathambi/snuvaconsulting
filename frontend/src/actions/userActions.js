@@ -59,7 +59,7 @@ export const logout = () => (dispatch) => {
 };
 
 // Register action
-export const register = (name, email, password) => async (dispatch) => {
+export const register = (name, email, password, phoneNumber) => async (dispatch) => {
   try {
     dispatch({ type: USER_REGISTER_REQUEST });
 
@@ -71,7 +71,7 @@ export const register = (name, email, password) => async (dispatch) => {
 
     const { data } = await axios.post(
       `${API_URL}/api/users`,
-      { name, email, password },
+      { name, email, password, phoneNumber },
       config
     );
 
@@ -99,7 +99,7 @@ export const register = (name, email, password) => async (dispatch) => {
 };
 
 // Register company action
-export const registerCompany = (name, email, password, companyName, companyLogo, companyDescription) => async (dispatch) => {
+export const registerCompany = (name, email, password, phoneNumber, companyName, companyLogo, companyDescription) => async (dispatch) => {
   try {
     dispatch({ type: USER_REGISTER_REQUEST });
 
@@ -111,10 +111,11 @@ export const registerCompany = (name, email, password, companyName, companyLogo,
 
     const { data } = await axios.post(
       `${API_URL}/api/users`,
-      { 
-        name, 
-        email, 
-        password, 
+      {
+        name,
+        email,
+        password,
+        phoneNumber,
         isAdmin: true,
         companyName,
         companyLogo,
@@ -205,7 +206,7 @@ export const updateUserProfile = (user) => async (dispatch, getState) => {
       type: USER_UPDATE_PROFILE_SUCCESS,
       payload: data,
     });
-    
+
     // Update local storage with new user info
     localStorage.setItem('userInfo', JSON.stringify(data));
   } catch (error) {

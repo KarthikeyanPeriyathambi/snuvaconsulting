@@ -15,6 +15,7 @@ import {
   jobCreateReducer,
   jobUpdateReducer,
   jobDeleteReducer,
+  jobApplicationCreateReducer,
 } from './reducers/jobReducers';
 import {
   resumeUploadReducer,
@@ -37,21 +38,22 @@ const reducer = combineReducers({
   userRegister: userRegisterReducer,
   userDetails: userDetailsReducer,
   userUpdateProfile: userUpdateProfileReducer,
-  
+
   jobList: jobListReducer,
   jobDetails: jobDetailsReducer,
   jobCreate: jobCreateReducer,
   jobUpdate: jobUpdateReducer,
   jobDelete: jobDeleteReducer,
-  
+  jobApplicationCreate: jobApplicationCreateReducer,
+
   resumeUpload: resumeUploadReducer,
   resumeDetails: resumeDetailsReducer,
   resumeChatbotResponse: resumeChatbotResponseReducer,
-  
+
   messageCreate: messageCreateReducer,
   messageList: messageListReducer,
   resumeMessages: resumeMessagesReducer,
-  
+
   adminDashboard: adminDashboardReducer,
   adminJobs: adminJobsReducer,
   adminCompanyProfileUpdate: adminCompanyProfileUpdateReducer,

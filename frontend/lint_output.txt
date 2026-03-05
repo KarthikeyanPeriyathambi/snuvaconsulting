@@ -1,0 +1,138 @@
+
+> frontend@0.0.0 lint
+> eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0
+
+(node:17968) ESLintEmptyConfigWarning: Running ESLint with an empty config (from D:\CBT-JS\Medhavi-Full\frontend\eslint.config.js). Please double-check that this is what you want. If you want to run ESLint with an empty config, export [{}] to remove this warning.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+D:\CBT-JS\Medhavi-Full\frontend\src\App.jsx
+  34:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\common\CallToAction.jsx
+  57:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\common\CtaSection.jsx
+  32:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\common\DashboardCard.jsx
+  58:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\common\EmptyState.jsx
+  24:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\common\FeatureShowcase.jsx
+  57:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\common\FormContainer.jsx
+  6:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\common\Loader.jsx
+  20:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\common\Message.jsx
+  29:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\common\PageContainer.jsx
+  30:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\common\PageHeader.jsx
+  30:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\common\SectionContainer.jsx
+  29:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\common\SectionHeader.jsx
+  46:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\common\StatsCard.jsx
+  36:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\common\TestimonialCard.jsx
+  22:9  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\home\CompaniesSection.jsx
+  18:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\home\JobCategoriesSection.jsx
+  66:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\home\TestimonialsSection.jsx
+  74:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\job\JobCard.jsx
+  16:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\layout\DashboardLayout.jsx
+  51:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\layout\Footer.jsx
+  11:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\layout\Header.jsx
+  26:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\routing\AdminRoute.jsx
+  8:52  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\components\routing\PrivateRoute.jsx
+  8:32  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\main.jsx
+  35:3  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\ApplicationSuccessScreen.jsx
+  26:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\ChatbotScreen.jsx
+  119:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\HomeScreen.jsx
+  63:13  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\JobDetailScreen.jsx
+  46:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\JobListScreen.jsx
+  137:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\LoginScreen.jsx
+  44:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\NotFoundScreen.jsx
+  8:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\ProfileScreen.jsx
+  71:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\RegisterCompanyScreen.jsx
+  79:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\RegisterScreen.jsx
+  52:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\ResumeUploadScreen.jsx
+  148:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\admin\AdminCompanyProfileScreen.jsx
+  47:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\admin\AdminDashboardScreen.jsx
+  69:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\admin\AdminJobApplicationsScreen.jsx
+  87:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\admin\AdminJobCreateScreen.jsx
+  80:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\admin\AdminJobEditScreen.jsx
+  103:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\admin\AdminJobListScreen.jsx
+  42:5  error  Parsing error: Unexpected token <
+
+D:\CBT-JS\Medhavi-Full\frontend\src\screens\admin\AdminMessagingScreen.jsx
+  133:5  error  Parsing error: Unexpected token <
+
+Γ£û 43 problems (43 errors, 0 warnings)
+

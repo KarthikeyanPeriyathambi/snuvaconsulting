@@ -2,9 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { getJobDetails } from '../actions/jobActions';
+import { getJobDetails, applyForJob } from '../actions/jobActions';
 import { getResumeDetails, addChatbotResponse } from '../actions/resumeActions';
-import { applyForJob } from '../actions/jobActions';
 import { RESUME_CHATBOT_RESPONSE_RESET } from '../constants/resumeConstants';
 import { JOB_APPLICATION_CREATE_RESET } from '../constants/jobConstants';
 import { SUPPORTED_LANGUAGES } from '../config';
@@ -15,59 +14,72 @@ const ChatbotScreen = () => {
   const { resumeId, jobId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userResponses, setUserResponses] = useState([]);
   const [currentResponse, setCurrentResponse] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [showGreetings, setShowGreetings] = useState(false);
+  const [showFirstQuestion, setShowFirstQuestion] = useState(false);
+
+
   const chatEndRef = useRef(null);
-  
+
   const jobDetails = useSelector((state) => state.jobDetails);
   const { loading: jobLoading, error: jobError, job } = jobDetails;
-  
+
   const resumeDetails = useSelector((state) => state.resumeDetails);
   const { loading: resumeLoading, error: resumeError, resume } = resumeDetails;
-  
+
   const resumeChatbotResponse = useSelector((state) => state.resumeChatbotResponse);
   const { loading: responseLoading, error: responseError, success: responseSuccess } = resumeChatbotResponse;
-  
+
   const jobApplicationCreate = useSelector((state) => state.jobApplicationCreate);
   const { loading: applyLoading, error: applyError, success: applySuccess } = jobApplicationCreate;
-  
+
   // Fetch job and resume details on component mount
   useEffect(() => {
     dispatch({ type: RESUME_CHATBOT_RESPONSE_RESET });
     dispatch({ type: JOB_APPLICATION_CREATE_RESET });
-    
+
     dispatch(getJobDetails(jobId));
     dispatch(getResumeDetails(resumeId));
-    
+
     // Set default language if resume has a preferred language
     if (resume && resume.preferredLanguage) {
       setSelectedLanguage(resume.preferredLanguage);
     }
-  }, [dispatch, jobId, resumeId, resume]);
-  
+
+    // Staggered introduction
+    const greetingTimer = setTimeout(() => setShowGreetings(true), 500);
+    const questionTimer = setTimeout(() => setShowFirstQuestion(true), 1500);
+
+    return () => {
+      clearTimeout(greetingTimer);
+      clearTimeout(questionTimer);
+    };
+  }, [dispatch, jobId, resumeId, !!resume]);
+
+
   // Scroll to bottom of chat when new messages are added
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [userResponses, currentQuestion]);
-  
+
   // Navigate to success page when application is submitted
   useEffect(() => {
     if (applySuccess) {
       navigate(`/application-success/${jobId}`);
     }
   }, [navigate, applySuccess, jobId]);
-  
+
   // Get questions from job or use default ones
   const getQuestions = () => {
     if (job && job.chatbotQuestions && job.chatbotQuestions.length > 0) {
       return job.chatbotQuestions;
     }
-    
+
     // Default questions if none are provided by the job
     return [
       { question: 'When are you available to start?', isRequired: true },
@@ -75,19 +87,19 @@ const ChatbotScreen = () => {
       { question: 'What are your salary expectations?', isRequired: true },
     ];
   };
-  
+
   const questions = getQuestions();
-  
+
   // Handler for submitting responses to individual questions
   const handleResponseSubmit = async () => {
     if (!currentResponse.trim() && questions[currentQuestion].isRequired) {
       return; // Don't submit empty responses for required questions
     }
-    
+
     const newResponses = [...userResponses];
     newResponses[currentQuestion] = currentResponse;
     setUserResponses(newResponses);
-    
+
     // Save response to the backend
     await dispatch(addChatbotResponse(
       resumeId,
@@ -95,9 +107,9 @@ const ChatbotScreen = () => {
       currentResponse,
       selectedLanguage
     ));
-    
+
     setCurrentResponse('');
-    
+
     // Move to next question or finish chatbot interaction
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
@@ -107,7 +119,7 @@ const ChatbotScreen = () => {
       dispatch(applyForJob(jobId, resumeId));
     }
   };
-  
+
   // Handler for pressing Enter key
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -115,12 +127,12 @@ const ChatbotScreen = () => {
       handleResponseSubmit();
     }
   };
-  
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Complete Your Application</h1>
-        
+
         {(jobLoading || resumeLoading) ? (
           <Loader />
         ) : (jobError || resumeError) ? (
@@ -136,12 +148,12 @@ const ChatbotScreen = () => {
                   {job && job.admin && job.admin.companyName}
                 </p>
               </div>
-              
+
               <div className="mb-6 flex justify-between items-center">
                 <p className="text-gray-700">
                   <span className="font-medium">Resume:</span> {resume && resume.name}
                 </p>
-                
+
                 <div className="flex items-center">
                   <label htmlFor="language" className="mr-2 text-gray-700">
                     <FontAwesomeIcon icon="language" className="mr-1" />
@@ -162,19 +174,25 @@ const ChatbotScreen = () => {
                   </select>
                 </div>
               </div>
-              
+
               <div className="border rounded-lg bg-gray-50 p-4 mb-6">
-                <div className="flex items-start mb-4">
-                  <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mr-3">
-                    <FontAwesomeIcon icon="robot" />
+                {showGreetings && (
+                  <div className="flex items-start mb-6 animate-fade-in">
+                    <div className="bg-blue-600 text-white rounded-full w-9 h-9 flex items-center justify-center flex-shrink-0 mr-3 shadow-md">
+                      <FontAwesomeIcon icon="robot" />
+                    </div>
+                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 max-w-[85%] shadow-sm">
+                      <p className="text-gray-800 font-medium">
+                        Hello! I'm your AI Recruitment Assistant.
+                      </p>
+                      <p className="text-gray-600 text-sm mt-1">
+                        Please answer a few questions to complete your application for this position.
+                      </p>
+                    </div>
                   </div>
-                  <div className="bg-blue-100 rounded-lg p-3 max-w-[80%]">
-                    <p className="text-gray-800">
-                      Please answer a few questions to complete your application for this position.
-                    </p>
-                  </div>
-                </div>
-                
+                )}
+
+
                 {/* Display chat history */}
                 {userResponses.map((response, index) => (
                   <div key={index}>
@@ -186,7 +204,7 @@ const ChatbotScreen = () => {
                         <p className="text-gray-800">{questions[index].question}</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-start mb-4 justify-end">
                       <div className="bg-gray-200 rounded-lg p-3 max-w-[80%]">
                         <p className="text-gray-800">{response}</p>
@@ -197,22 +215,34 @@ const ChatbotScreen = () => {
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Current question */}
-                {!isSubmitting && currentQuestion < questions.length && (
-                  <div className="flex items-start mb-4">
-                    <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mr-3">
+                {!isSubmitting && currentQuestion < questions.length && showFirstQuestion && (
+                  <div className="flex items-start mb-4 animate-slide-up">
+                    <div className="bg-blue-600 text-white rounded-full w-9 h-9 flex items-center justify-center flex-shrink-0 mr-3 shadow-md">
                       <FontAwesomeIcon icon="robot" />
                     </div>
-                    <div className="bg-blue-100 rounded-lg p-3 max-w-[80%]">
-                      <p className="text-gray-800">{questions[currentQuestion].question}</p>
+                    <div className="bg-white border border-blue-200 rounded-2xl p-4 max-w-[85%] shadow-sm relative">
+                      <p className="text-gray-800 font-semibold">{questions[currentQuestion].question}</p>
                       {questions[currentQuestion].isRequired && (
-                        <span className="text-red-500 text-sm">*Required</span>
+                        <span className="text-red-500 text-[10px] absolute -bottom-5 left-0 font-bold uppercase tracking-wider">
+                          * Action Required
+                        </span>
                       )}
                     </div>
                   </div>
                 )}
-                
+
+                {/* Typing Indicator */}
+                {!isSubmitting && showGreetings && !showFirstQuestion && (
+                  <div className="flex items-center space-x-2 text-gray-400 ml-12 mb-4">
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                  </div>
+                )}
+
+
                 {/* Submission message */}
                 {isSubmitting && (
                   <div className="flex items-start mb-4">
@@ -226,10 +256,10 @@ const ChatbotScreen = () => {
                     </div>
                   </div>
                 )}
-                
+
                 <div ref={chatEndRef} />
               </div>
-              
+
               {!isSubmitting && currentQuestion < questions.length && (
                 <div className="relative">
                   <textarea
@@ -241,7 +271,7 @@ const ChatbotScreen = () => {
                     rows="3"
                     disabled={responseLoading}
                   ></textarea>
-                  
+
                   <button
                     className="absolute right-3 bottom-3 text-blue-600 hover:text-blue-800"
                     onClick={handleResponseSubmit}
@@ -251,13 +281,13 @@ const ChatbotScreen = () => {
                   </button>
                 </div>
               )}
-              
+
               {(responseError || applyError) && (
                 <Message variant="error" className="mt-4">
                   {responseError || applyError}
                 </Message>
               )}
-              
+
               <div className="mt-6 text-sm text-gray-500">
                 <p>
                   <FontAwesomeIcon icon="info-circle" className="mr-1" />

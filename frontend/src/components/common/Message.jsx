@@ -1,7 +1,7 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-const Message = ({ variant, children }) => {
+const Message = ({ variant = 'info', children }) => {
   let icon;
   let className = 'flex items-start p-4 mb-4 rounded-lg';
 
@@ -33,10 +33,6 @@ const Message = ({ variant, children }) => {
       <div>{children}</div>
     </div>
   );
-};
-
-Message.defaultProps = {
-  variant: 'info',
 };
 
 export default Message;

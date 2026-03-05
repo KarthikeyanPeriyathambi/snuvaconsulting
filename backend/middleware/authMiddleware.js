@@ -44,4 +44,25 @@ const admin = (req, res, next) => {
   }
 };
 
-export { protect, admin };
+// Optional protect - sets req.user if token is present, but doesn't fail if not
+const optionalProtect = asyncHandler(async (req, res, next) => {
+  let token;
+
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    try {
+      token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.id).select('-password');
+    } catch (error) {
+      // Invalid token — just ignore it, proceed as anonymous
+      console.warn('[Auth] Optional protect: invalid token, proceeding as anonymous');
+    }
+  }
+
+  next();
+});
+
+export { protect, admin, optionalProtect };

@@ -18,6 +18,7 @@ import {
   faStar
 } from '@fortawesome/free-solid-svg-icons';
 import { listJobs } from '../actions/jobActions';
+import JobCard from '../components/job/JobCard';
 import Loader from '../components/common/Loader';
 import Message from '../components/common/Message';
 import { JOB_TYPES, EXPERIENCE_LEVELS } from '../config';
@@ -86,39 +87,39 @@ const ButtonHover = styled.button`
 
 const JobListScreen = () => {
   const dispatch = useDispatch();
-  
+
   const [keyword, setKeyword] = useState('');
   const [location, setLocation] = useState('');
   const [jobType, setJobType] = useState('');
   const [experienceLevel, setExperienceLevel] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  
+
   const jobList = useSelector((state) => state.jobList);
   const { loading, error, jobs, pages, page } = jobList;
-  
+
   useEffect(() => {
-    dispatch(listJobs({ 
-      keyword, 
-      location, 
-      jobType, 
-      experienceLevel, 
-      page: currentPage 
+    dispatch(listJobs({
+      keyword,
+      location,
+      jobType,
+      experienceLevel,
+      page: currentPage
     }));
   }, [dispatch, keyword, location, jobType, experienceLevel, currentPage]);
-  
+
   const searchHandler = (e) => {
     e.preventDefault();
     setCurrentPage(1);
-    dispatch(listJobs({ 
-      keyword, 
-      location, 
-      jobType, 
-      experienceLevel, 
-      page: 1 
+    dispatch(listJobs({
+      keyword,
+      location,
+      jobType,
+      experienceLevel,
+      page: 1
     }));
   };
-  
+
   const clearFilters = () => {
     setKeyword('');
     setLocation('');
@@ -127,11 +128,11 @@ const JobListScreen = () => {
     setCurrentPage(1);
     dispatch(listJobs({}));
   };
-  
+
   const toggleFilters = () => {
     setShowFilters(!showFilters);
   };
-  
+
   return (
     <div className="min-h-screen py-12 bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <div className="container mx-auto px-4 max-w-7xl">
@@ -141,11 +142,11 @@ const JobListScreen = () => {
             Find Your Perfect Career
           </h1>
           <p className="text-lg md:text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto">
-            Browse through thousands of opportunities from industry-leading companies. 
+            Browse through thousands of opportunities from industry-leading companies.
             Your next career move is just a click away.
           </p>
         </div>
-        
+
         {/* Search & Filter Section */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-soft border border-gray-100/50 hover:shadow-lg transition-all duration-300 max-w-5xl mx-auto mb-12">
           <form onSubmit={searchHandler} className="p-8">
@@ -169,9 +170,9 @@ const JobListScreen = () => {
                       value={keyword}
                       onChange={(e) => setKeyword(e.target.value)}
                     />
-                    <FontAwesomeIcon 
-                      icon={faSearch} 
-                      className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-primary-500 transition-colors duration-200" 
+                    <FontAwesomeIcon
+                      icon={faSearch}
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-primary-500 transition-colors duration-200"
                     />
                   </div>
                 </div>
@@ -193,9 +194,9 @@ const JobListScreen = () => {
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
                     />
-                    <FontAwesomeIcon 
-                      icon={faMapMarkerAlt} 
-                      className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-primary-500 transition-colors duration-200" 
+                    <FontAwesomeIcon
+                      icon={faMapMarkerAlt}
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-primary-500 transition-colors duration-200"
                     />
                   </div>
                 </div>
@@ -209,7 +210,7 @@ const JobListScreen = () => {
                     <FontAwesomeIcon icon={faSearch} className="mr-2" />
                     <span>Search Jobs</span>
                   </button>
-                  
+
                   <button
                     type="button"
                     onClick={toggleFilters}
@@ -241,8 +242,8 @@ const JobListScreen = () => {
                       >
                         <option value="">All Job Types</option>
                         {JOB_TYPES.map((type) => (
-                          <option key={type.value} value={type.value}>
-                            {type.label}
+                          <option key={type} value={type}>
+                            {type}
                           </option>
                         ))}
                       </select>
@@ -264,8 +265,8 @@ const JobListScreen = () => {
                       >
                         <option value="">All Experience Levels</option>
                         {EXPERIENCE_LEVELS.map((level) => (
-                          <option key={level.value} value={level.value}>
-                            {level.label}
+                          <option key={level} value={level}>
+                            {level}
                           </option>
                         ))}
                       </select>
@@ -323,7 +324,13 @@ const JobListScreen = () => {
                   <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-12">
                     {jobs.map((job, index) => (
                       <AnimatedJobCard key={job._id} index={index}>
-                        {/* JobCard component */}
+                        <JobCard
+                          job={{
+                            ...job,
+                            company: job.admin?.companyName || 'Company',
+                            logo: job.admin?.companyLogo
+                          }}
+                        />
                       </AnimatedJobCard>
                     ))}
                   </div>
@@ -333,37 +340,34 @@ const JobListScreen = () => {
                     <button
                       onClick={() => setCurrentPage(Math.max(1, page - 1))}
                       disabled={page === 1}
-                      className={`h-12 w-12 rounded-xl flex items-center justify-center transition-all duration-200 ${
-                        page === 1
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-white hover:bg-gray-50 text-gray-600 hover:text-primary-600 shadow-sm'
-                      }`}
+                      className={`h-12 w-12 rounded-xl flex items-center justify-center transition-all duration-200 ${page === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white hover:bg-gray-50 text-gray-600 hover:text-primary-600 shadow-sm'
+                        }`}
                     >
                       <FontAwesomeIcon icon={faArrowLeft} />
                     </button>
-                    
+
                     {Array.from({ length: pages }, (_, i) => (
                       <button
                         key={i + 1}
                         onClick={() => setCurrentPage(i + 1)}
-                        className={`h-12 min-w-[48px] rounded-xl flex items-center justify-center transition-all duration-200 font-medium ${
-                          page === i + 1
-                            ? 'bg-primary-600 text-white shadow-md'
-                            : 'bg-white hover:bg-gray-50 text-gray-600 hover:text-primary-600 shadow-sm'
-                        }`}
+                        className={`h-12 min-w-[48px] rounded-xl flex items-center justify-center transition-all duration-200 font-medium ${page === i + 1
+                          ? 'bg-primary-600 text-white shadow-md'
+                          : 'bg-white hover:bg-gray-50 text-gray-600 hover:text-primary-600 shadow-sm'
+                          }`}
                       >
                         {i + 1}
                       </button>
                     ))}
-                    
+
                     <button
                       onClick={() => setCurrentPage(Math.min(pages, page + 1))}
                       disabled={page === pages}
-                      className={`h-12 w-12 rounded-xl flex items-center justify-center transition-all duration-200 ${
-                        page === pages
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-white hover:bg-gray-50 text-gray-600 hover:text-primary-600 shadow-sm'
-                      }`}
+                      className={`h-12 w-12 rounded-xl flex items-center justify-center transition-all duration-200 ${page === pages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white hover:bg-gray-50 text-gray-600 hover:text-primary-600 shadow-sm'
+                        }`}
                     >
                       <FontAwesomeIcon icon={faArrowRight} />
                     </button>

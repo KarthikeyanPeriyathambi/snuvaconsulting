@@ -51,7 +51,7 @@ const HomeScreen = () => {
 
   useEffect(() => {
     dispatch(listJobs());
-    
+
     // Welcome toast notification with improved styling
     toast.info('Welcome to CyFuture! Find your dream job with our AI-powered matching.', {
       position: "top-right",
@@ -61,9 +61,9 @@ const HomeScreen = () => {
       pauseOnHover: true,
       draggable: true,
       icon: <FontAwesomeIcon icon={faRocket} className="text-primary-600" />,
-      style: { 
-        borderLeft: '4px solid #4F46E5', 
-        background: 'linear-gradient(to right, #F9FAFB, #F3F4F6)' 
+      style: {
+        borderLeft: '4px solid #4F46E5',
+        background: 'linear-gradient(to right, #F9FAFB, #F3F4F6)'
       },
     });
   }, [dispatch]);
@@ -82,7 +82,7 @@ const HomeScreen = () => {
     const location = filters.location ? ` in ${filters.location}` : '';
     const profile = filters.profile ? ` matching "${filters.profile}" profile` : '';
     const salary = filters.stipend ? ` with salary range ${filters.stipend}` : '';
-    
+
     toast.success(
       <div className="flex items-start">
         <FontAwesomeIcon icon={faSearch} className="text-lg mr-3 mt-1 text-primary-600" />
@@ -139,7 +139,7 @@ const HomeScreen = () => {
       {/* Hero Section */}
       <section className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 text-white overflow-hidden">
         {/* Animated background elements */}
-        <motion.div 
+        <motion.div
           animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
           className="absolute inset-0 overflow-hidden opacity-30"
@@ -370,12 +370,12 @@ const HomeScreen = () => {
                 </div>
               </div>
 
-              <motion.div 
+              <motion.div
                 className="mt-8 flex justify-center"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <button 
+                <button
                   onClick={handleSearch}
                   className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-medium rounded-lg transition-all flex items-center justify-center hover:from-primary-500 hover:to-primary-600 shadow-lg shadow-primary-600/20"
                 >
@@ -405,7 +405,7 @@ const HomeScreen = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
           {loading ? (
             <div className="col-span-full flex flex-col items-center justify-center py-16">
-              <motion.div 
+              <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                 className="w-16 h-16 mb-4"
@@ -415,7 +415,7 @@ const HomeScreen = () => {
               <p className="text-lg text-gray-600 animate-pulse">Finding the perfect opportunities...</p>
             </div>
           ) : error ? (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="col-span-full"
@@ -423,14 +423,14 @@ const HomeScreen = () => {
               <Message variant="error">{error}</Message>
             </motion.div>
           ) : !jobs || jobs.length === 0 ? (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="col-span-full bg-white/80 backdrop-blur-sm rounded-2xl shadow-soft border border-gray-100 p-12 text-center max-w-2xl mx-auto"
             >
-              <motion.div 
+              <motion.div
                 className="w-20 h-20 bg-primary-50 rounded-full mx-auto mb-6 flex items-center justify-center"
-                animate={{ 
+                animate={{
                   scale: [1, 1.1, 1],
                   rotate: [0, 10, -10, 0]
                 }}
@@ -445,14 +445,14 @@ const HomeScreen = () => {
               <h3 className="text-2xl font-semibold mb-4">No jobs found</h3>
               <p className="text-gray-600 mb-8 text-lg">Check back later for new opportunities or adjust your search criteria.</p>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Link 
-                  to="/register" 
+                <Link
+                  to="/register"
                   className="inline-flex items-center justify-center px-8 py-4 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-all duration-300 font-medium group shadow-soft hover:shadow-lg"
                 >
                   Get job alerts
-                  <FontAwesomeIcon 
-                    icon={faArrowRight} 
-                    className="ml-2 transform group-hover:translate-x-1 transition-transform duration-300" 
+                  <FontAwesomeIcon
+                    icon={faArrowRight}
+                    className="ml-2 transform group-hover:translate-x-1 transition-transform duration-300"
                   />
                 </Link>
               </motion.div>
@@ -460,15 +460,15 @@ const HomeScreen = () => {
           ) : (
             <>
               {jobs.slice(0, 6).map((job, index) => (
-                <motion.div 
-                  key={job._id} 
+                <motion.div
+                  key={job._id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ y: -8 }}
                 >
-                  <JobCard 
+                  <JobCard
                     job={{
                       _id: job._id,
                       title: job.title,

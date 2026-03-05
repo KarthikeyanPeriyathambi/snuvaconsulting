@@ -19,6 +19,7 @@ const authUser = asyncHandler(async (req, res) => {
       companyName: user.companyName,
       companyLogo: user.companyLogo,
       companyDescription: user.companyDescription,
+      phoneNumber: user.phoneNumber,
       token: generateToken(user._id),
     });
   } else {
@@ -31,7 +32,7 @@ const authUser = asyncHandler(async (req, res) => {
 // @route   POST /api/users
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password, isAdmin, companyName, companyLogo, companyDescription } = req.body;
+  const { name, email, password, isAdmin, companyName, companyLogo, companyDescription, phoneNumber } = req.body;
 
   const userExists = await User.findOne({ email });
 
@@ -45,6 +46,7 @@ const registerUser = asyncHandler(async (req, res) => {
     name,
     email,
     password,
+    phoneNumber,
     isAdmin: !!isAdmin, // Convert to boolean
   };
 
@@ -54,13 +56,13 @@ const registerUser = asyncHandler(async (req, res) => {
       res.status(400);
       throw new Error('Company name is required for admin users');
     }
-    
+
     userData.companyName = companyName;
-    
+
     if (companyLogo) {
       userData.companyLogo = companyLogo;
     }
-    
+
     if (companyDescription) {
       userData.companyDescription = companyDescription;
     }
@@ -77,6 +79,7 @@ const registerUser = asyncHandler(async (req, res) => {
       companyName: user.companyName,
       companyLogo: user.companyLogo,
       companyDescription: user.companyDescription,
+      phoneNumber: user.phoneNumber,
       token: generateToken(user._id),
     });
   } else {
@@ -100,6 +103,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
       companyName: user.companyName,
       companyLogo: user.companyLogo,
       companyDescription: user.companyDescription,
+      phoneNumber: user.phoneNumber,
     });
   } else {
     res.status(404);
@@ -116,11 +120,12 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   if (user) {
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
-    
+    user.phoneNumber = req.body.phoneNumber || user.phoneNumber;
+
     if (req.body.password) {
       user.password = req.body.password;
     }
-    
+
     if (user.isAdmin) {
       user.companyName = req.body.companyName || user.companyName;
       user.companyLogo = req.body.companyLogo || user.companyLogo;
@@ -137,6 +142,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
       companyName: updatedUser.companyName,
       companyLogo: updatedUser.companyLogo,
       companyDescription: updatedUser.companyDescription,
+      phoneNumber: updatedUser.phoneNumber,
       token: generateToken(updatedUser._id),
     });
   } else {

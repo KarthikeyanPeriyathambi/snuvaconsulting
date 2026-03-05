@@ -56,6 +56,21 @@ const resumeSchema = mongoose.Schema(
     additionalInfo: {
       type: String,
     },
+    // AI resume score (0-100) computed on upload
+    resumeScore: {
+      type: Number,
+      default: 0,
+    },
+    // The job the candidate applied to
+    appliedJobId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Job',
+      default: null,
+    },
+    appliedJobTitle: {
+      type: String,
+      default: '',
+    },
     chatbotResponses: [
       {
         question: String,
