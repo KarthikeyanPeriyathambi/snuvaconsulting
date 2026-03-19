@@ -1,5 +1,5 @@
 // API base URL - Configurable for different environments
-export const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+export const API_URL = import.meta.env.VITE_BACKEND_URL || 'https://snuvaconsulting.onrender.com';
 
 // Cloudinary configuration
 export const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'resumes';
