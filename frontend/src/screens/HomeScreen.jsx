@@ -53,7 +53,7 @@ const HomeScreen = () => {
     dispatch(listJobs());
 
     // Welcome toast notification with improved styling
-    toast.info('Welcome to CyFuture! Find your dream job with our AI-powered matching.', {
+    toast.info('Welcome to SNUVA Consulting LLC! Find your dream job with our AI-powered matching.', {
       position: "top-right",
       autoClose: 5000,
       hideProgressBar: false,
@@ -89,7 +89,7 @@ const HomeScreen = () => {
         <div>
           <p className="font-medium">Searching for jobs</p>
           <p className="text-sm text-gray-600 mt-1">
-            {searchTerm}{location}{profile}{salary}
+            {searchTerm}{location}{profile}
           </p>
         </div>
       </div>,
@@ -163,8 +163,8 @@ const HomeScreen = () => {
               className="mb-8"
             >
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 bg-gradient-to-r from-white via-primary-200 to-white bg-clip-text text-transparent leading-tight">
-                Your Career Journey{' '}
-                <span className="bg-gradient-to-r from-secondary-400 to-secondary-600 bg-clip-text text-transparent">Starts Here</span>
+                SNUVA CONSULTING{' '}
+                <span className="bg-gradient-to-r from-secondary-400 to-secondary-600 bg-clip-text text-transparent">LLC</span>
               </h1>
               <p className="text-lg md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
                 Connect with top employers and find your dream job with our
@@ -255,7 +255,7 @@ const HomeScreen = () => {
       <SectionContainer background="gradient" spacing="default" maxWidth="7xl" hasPattern>
         <div className="text-center max-w-3xl mx-auto mb-16">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">Why Choose CyFuture?</h2>
+            <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">SNUVA Consulting LLC</h2>
             <p className="text-xl text-gray-600 leading-relaxed">Our platform offers cutting-edge features designed to make your job search smarter and more efficient</p>
           </motion.div>
         </div>
@@ -461,7 +461,7 @@ const HomeScreen = () => {
             <>
               {jobs.slice(0, 6).map((job, index) => (
                 <motion.div
-                  key={job._id}
+                  key={job.id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -470,11 +470,11 @@ const HomeScreen = () => {
                 >
                   <JobCard
                     job={{
-                      _id: job._id,
+                      id: job.id,
                       title: job.title,
                       company: job.admin?.companyName || "Company",
                       location: job.location,
-                      salary: job.salary,
+                      // salary: job.salary,
                       jobType: job.jobType,
                       experienceLevel: job.experienceLevel,
                       description: job.description,

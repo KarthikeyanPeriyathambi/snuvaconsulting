@@ -9,6 +9,14 @@ import {
     RESUME_CHATBOT_RESPONSE_REQUEST,
     RESUME_CHATBOT_RESPONSE_SUCCESS,
     RESUME_CHATBOT_RESPONSE_FAIL,
+    RESUME_IMPROVE_REQUEST,
+    RESUME_IMPROVE_SUCCESS,
+    RESUME_IMPROVE_FAIL,
+    RESUME_IMPROVE_RESET,
+    RESUME_SAVE_IMPROVED_REQUEST,
+    RESUME_SAVE_IMPROVED_SUCCESS,
+    RESUME_SAVE_IMPROVED_FAIL,
+    RESUME_SAVE_IMPROVED_RESET,
 } from '../constants/resumeConstants';
 import { API_URL } from '../config';
 
@@ -117,3 +125,77 @@ export const addChatbotResponse =
             });
         }
     };
+
+// Improve resume
+export const improveResume = (resumeId, jobId) => async (dispatch, getState) => {
+    try {
+        dispatch({ type: RESUME_IMPROVE_REQUEST });
+
+        const {
+            userLogin: { userInfo },
+        } = getState();
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${userInfo.token}`,
+            },
+        };
+
+        const { data } = await axios.post(
+            `${API_URL}/api/resumes/${resumeId}/improve`,
+            { jobId },
+            config
+        );
+
+        dispatch({
+            type: RESUME_IMPROVE_SUCCESS,
+            payload: data,
+        });
+    } catch (error) {
+        dispatch({
+            type: RESUME_IMPROVE_FAIL,
+            payload:
+                error.response && error.response.data.message
+                    ? error.response.data.message
+                    : error.message,
+        });
+    }
+};
+
+// Save improved resume
+export const saveImprovedResume = (resumeId, improvedData) => async (dispatch, getState) => {
+    try {
+        dispatch({ type: RESUME_SAVE_IMPROVED_REQUEST });
+
+        const {
+            userLogin: { userInfo },
+        } = getState();
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${userInfo.token}`,
+            },
+        };
+
+        const { data } = await axios.put(
+            `${API_URL}/api/resumes/${resumeId}/improved`,
+            improvedData,
+            config
+        );
+
+        dispatch({
+            type: RESUME_SAVE_IMPROVED_SUCCESS,
+            payload: data,
+        });
+    } catch (error) {
+        dispatch({
+            type: RESUME_SAVE_IMPROVED_FAIL,
+            payload:
+                error.response && error.response.data.message
+                    ? error.response.data.message
+                    : error.message,
+        });
+    }
+};

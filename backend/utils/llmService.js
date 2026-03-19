@@ -1,7 +1,16 @@
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
+
+// Helper for persistent logging
+const debugLog = (msg) => {
+  const logPath = path.join(process.cwd(), 'parser_debug.log');
+  const timestamp = new Date().toISOString();
+  fs.appendFileSync(logPath, `[${timestamp}] ${msg}\n`);
+};
 
 /**
  * LLM Service for processing resume data and job matching
@@ -32,18 +41,21 @@ class LLMService {
    */
   async parseResume(resumeText) {
     const prompt = `
-      Parse the following resume and extract the structured information:
-      - Full Name
-      - Email
-      - Phone Number (if available)
-      - Skills (as a list)
-      - Education (institution, degree, field, dates)
-      - Experience (company, position, dates, description)
-      - Projects (title, description, technologies used)
+      You are a specialized Resume Data Extractor. 
+      Analyze the text below and return a highly accurate JSON representation of the candidate's profile.
       
-      Format the output as a JSON object.
-      
-      Resume Text:
+      RETURN ONLY THIS JSON FORMAT:
+      {
+        "name": "string",
+        "email": "string",
+        "phone": "string",
+        "skills": ["string", "string"],
+        "education": [{ "institution": "string", "degree": "string", "year": "string" }],
+        "experience": [{ "company": "string", "position": "string", "duration": "string", "description": "string" }],
+        "projects": [{ "title": "string", "description": "string" }]
+      }
+
+      RESUME TEXT:
       ${resumeText}
     `;
 
@@ -55,51 +67,153 @@ class LLMService {
       return this.extractJsonFromResponse(response);
     } catch (error) {
       console.error(`[${this.provider.toUpperCase()}] Error parsing resume:`, error);
-      throw new Error(`Failed to parse resume data with ${this.provider}: ${error.message}`);
+      // Return a structured empty object instead of throwing to allow fallback logic
+      return {
+        name: '',
+        email: '',
+        phone: '',
+        skills: [],
+        education: [],
+        experience: [],
+        projects: []
+      };
     }
   }
 
   /**
-   * Match resume against job description using LLM
+   * Match resume against job description using LLM (Semantic / Related-Content Matching)
    * @param {Object} resume - The structured resume data
    * @param {Object} job - The job posting data
    */
   async matchResumeToJob(resume, job) {
     const prompt = `
-      Evaluate how well the candidate's resume matches the job requirements.
-      
-      Job Title: ${job.title}
-      Job Description: ${job.description}
-      Required Skills: ${job.requiredSkills.join(', ')}
-      Job Requirements: ${job.jobRequirements.join(', ')}
-      Experience Level: ${job.experienceLevel}
-      
-      Candidate's Resume:
-      Name: ${resume.name}
-      Skills: ${resume.skills.join(', ')}
-      Experience: ${JSON.stringify(resume.experience)}
-      Education: ${JSON.stringify(resume.education)}
-      Projects: ${JSON.stringify(resume.projects)}
-      
-      Provide a detailed evaluation with the following:
-      1. Overall match score (0-100)
-      2. Skills match score (0-100)
-      3. Experience match score (0-100) 
-      4. Education match score (0-100)
-      5. Detailed reasoning for your evaluation
-      
-      Format the output as a JSON object with fields: overallScore, skillsScore, experienceScore, educationScore, reasoning.
-    `;
+You are a professional HR analyst and resume screener. Your task is to evaluate how well a candidate's resume matches a job posting based on SEMANTIC and CONCEPTUAL relevance.
+
+MATCHING PRINCIPLES:
+- DO NOT use exact keyword matching. Look for related concepts, adjacent skills, and industry relevance.
+- Give credit for related skills (e.g., "Java" aligns with "Object-Oriented Programming" and "Kotlin").
+- Focus on the content of experience, not just titles.
+- If a candidate has the core skills needed to perform the role, they should be a "MATCH" or "PARTIAL", never a "NO_MATCH" unless the industry is completely different (e.g., Chef applying for Cloud Architect).
+
+EXPERIENCE CALCULATION:
+- Sum up the durations of all relevant work experience entries.
+- Map job levels to suggested years:
+    - Entry-level: 0-2 years
+    - Mid-level: 3-6 years
+    - Senior: 7-12 years 
+    - Executive: 12+ years
+- Be lenient if a candidate is slightly below or above these ranges.
+
+=== JOB DETAILS ===
+Job Title: ${job.title}
+Experience Level: ${job.experienceLevel || 'Not specified'}
+Required Skills: ${(job.requiredSkills || []).join(', ')}
+Job Description: ${job.description}
+Job Requirements: ${(job.jobRequirements || []).join(', ')}
+
+=== CANDIDATE RESUME ===  
+Name: ${resume.name || 'Candidate'}
+Skills Listed: ${Array.isArray(resume.skills) ? resume.skills.join(', ') : (resume.skills || 'None')}
+Work Experience: ${JSON.stringify(resume.experience || [])}
+Education: ${JSON.stringify(resume.education || [])}
+Projects: ${JSON.stringify(resume.projects || [])}
+
+=== YOUR EVALUATION TASK ===
+Respond ONLY with a valid JSON object:
+{
+  "overallScore": <number 0-100 reflecting total match quality>,
+  "skillsScore": <number 0-100 reflecting skill alignment>,
+  "experienceScore": <number 0-100 reflecting years and relevancy of work>,
+  "educationScore": <number 0-100>,
+  "projectsScore": <number 0-100>,
+  "matchedSkills": ["skill1", "skill2"],
+  "missingSkills": ["skill3", "skill4"],
+  "feedback": "constructive advice",
+  "reasoning": "A logical explanation of how you derived the score",
+  "lowScoreReasons": ["Only list critical blockers here, otherwise keep empty"],
+  "matchCategory": "MATCH" | "PARTIAL" | "NO_MATCH",
+  "eligibility": "NOT_ELIGIBLE" | "OVER_QUALIFIED" | "UNDER_QUALIFIED" | "ELIGIBLE"
+}
+
+ELIGIBILITY LOGIC (for your internal reference):
+- If candidate has NO core skills for role -> NO_MATCH / NOT_ELIGIBLE (REJECT)
+- If candidate has significantly more experience than requested (>3 years over) -> OVER_QUALIFIED (REJECT as per user request)
+- If candidate has less experience than requested (-1 to -2 years under) -> UNDER_QUALIFIED (DO NOT REJECT, mark for chatbot follow-up)
+- Otherwise -> ELIGIBLE
+`;
 
     try {
       console.log(`[${this.provider.toUpperCase()}] Sending resume-job matching request...`);
       const response = await this.sendRequest(prompt);
-      console.log(`[${this.provider.toUpperCase()}] Received matching response, extracting JSON...`);
       return this.extractJsonFromResponse(response);
     } catch (error) {
       console.error(`[${this.provider.toUpperCase()}] Error matching resume to job:`, error);
       throw new Error(`Failed to evaluate resume match with ${this.provider}`);
     }
+  }
+
+  /**
+   * Automatically improve a resume to better match a job description
+   * @param {Object} resume - Current resume data
+   * @param {Object} job - Target job data
+   */
+  async improveResume(resume, job) {
+    const prompt = `
+You are a professional Resume Optimizer. Your goal is to REWRITE and ENHANCE the candidate's resume to perfectly align with the target job while remaining truthful.
+
+=== JOB DETAILS ===
+Title: ${job.title}
+Required Skills: ${(job.requiredSkills || []).join(', ')}
+Description: ${job.description}
+
+=== ORIGINAL RESUME ===
+Skills: ${(resume.skills || []).join(', ')}
+Experience: ${JSON.stringify(resume.experience)}
+Projects: ${JSON.stringify(resume.projects)}
+
+=== TASK ===
+1. Enhance the Skills list: Include related skills from the job description that the candidate likely has based on their experience.
+2. Rewrite Work Experience: Adjust descriptions to highlight responsibilities and achievements that match the job requirements. Use action verbs.
+3. Optimize Projects: Ensure projects showcase relevant tech stack.
+
+Respond ONLY with a JSON object containing the IMPROVED resume data:
+{
+  "skills": ["skill1", "skill2", ...],
+  "experience": [ { "company": "...", "position": "...", "description": "REWRITTEN DESCRIPTION", "dates": "..." }, ... ],
+  "projects": [ { "title": "...", "description": "REWRITTEN DESCRIPTION", "technologies": "..." }, ... ]
+}
+    `;
+
+    try {
+      const response = await this.sendRequest(prompt);
+      return JSON.parse(this.cleanJSONResponse(response.candidates[0].content.parts[0].text));
+    } catch (error) {
+      console.error(`[${this.provider.toUpperCase()}] Error improving resume:`, error);
+      throw new Error(`Failed to improve resume with ${this.provider}`);
+    }
+  }
+
+  /**
+   * Cleans a string response to extract only the JSON part
+   */
+  cleanJSONResponse(text) {
+    if (!text) return '{}';
+    
+    // First, remove markdown code blocks (```json ... ``` or ``` ... ```)
+    let cleaned = text.replace(/```(json)?\s*([\s\S]*?)\s*```/g, '$2').trim();
+
+    // If it's still not plain JSON (contains preamble), find the first { and last }
+    const firstBrace = cleaned.indexOf('{');
+    const lastBrace = cleaned.lastIndexOf('}');
+    
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+    }
+
+    // Basic syntax cleaning: ensure no trailing non-JSON characters
+    cleaned = cleaned.replace(/[\n\r\t]/g, ' ').trim();
+    
+    return cleaned;
   }
 
   /**
@@ -214,24 +328,22 @@ class LLMService {
    * @param {string} prompt - The prompt to send to local Ollama
    */
   async sendOllamaLocalRequest(prompt) {
-    const requestBody = {
-      model: this.ollamaModel,
-      prompt: prompt,
-      stream: false,
-      options: {
-        temperature: 0.2,
-        top_p: 0.8,
-        top_k: 40
-      }
-    };
-
     try {
+      console.log(`[Ollama] Sending local request to ${this.ollamaUrl}`);
       const response = await fetch(this.ollamaUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify({
+          model: this.ollamaModel,
+          prompt: prompt,
+          stream: false,
+          options: {
+            temperature: 0.1,
+            num_ctx: 4096, // Ensure context is large enough for resumes
+          }
+        }),
       });
 
       if (!response.ok) {
@@ -241,23 +353,19 @@ class LLMService {
       }
 
       const result = await response.json();
+      const text = result.response || '';
 
-      // Format Ollama response to match Gemini format for compatibility
+      debugLog(`[Ollama RAW] First 200 chars: ${text.substring(0, 200)}`);
+      console.log(text.substring(0, 500)); 
+      if (text.length > 500) console.log('... (truncated)');
+      console.log('[Ollama] --- RAW LLM RESPONSE END ---');
+
+      // Return consistent format
       return {
-        candidates: [
-          {
-            content: {
-              parts: [
-                {
-                  text: result.response
-                }
-              ]
-            }
-          }
-        ]
+        candidates: [{ content: { parts: [{ text }] } }]
       };
     } catch (error) {
-      console.error('Error calling local Ollama:', error);
+      console.error('[Ollama] ❌ Local Ollama Error:', error.message);
       throw error;
     }
   }
@@ -282,6 +390,7 @@ class LLMService {
     };
 
     try {
+      console.log(`[Ollama API] Sending request to ${this.ollamaUrl}`);
       const headers = {
         'Content-Type': 'application/json'
       };
@@ -304,32 +413,25 @@ class LLMService {
       }
 
       const result = await response.json();
-
-      // Format API response to match Gemini format for compatibility
-      let responseText = '';
+      
+      let text = '';
       if (result.choices && result.choices[0] && result.choices[0].message) {
-        responseText = result.choices[0].message.content;
+        text = result.choices[0].message.content;
       } else if (result.response) {
-        responseText = result.response;
+        text = result.response;
       } else {
-        responseText = JSON.stringify(result);
+        text = JSON.stringify(result);
       }
 
+      debugLog(`[Ollama API RAW] First 200 chars: ${text.substring(0, 200)}`);
+      console.log(text.substring(0, 500));
+      console.log('[Ollama API] --- RAW LLM RESPONSE END ---');
+
       return {
-        candidates: [
-          {
-            content: {
-              parts: [
-                {
-                  text: responseText
-                }
-              ]
-            }
-          }
-        ]
+        candidates: [{ content: { parts: [{ text }] } }]
       };
     } catch (error) {
-      console.error('Error calling API-based Ollama:', error);
+      console.error('[Ollama API] ❌ API Request Error:', error.message);
       throw error;
     }
   }

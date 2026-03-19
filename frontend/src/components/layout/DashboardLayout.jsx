@@ -44,37 +44,36 @@ const DashboardLayout = ({ children, activePage = 'dashboard', userType = 'candi
       { id: 'settings', label: 'Settings', icon: faCog, link: '/admin/settings' },
     ]
   };
-  
+
   const navItems = menuItems[userType] || menuItems.candidate;
-  
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <div className="hidden md:flex md:flex-col w-64 bg-white border-r border-gray-200">
         <div className="flex items-center justify-center h-16 border-b border-gray-200">
           <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
-            CyFuture
+            SNUVA Consulting LLC
           </span>
         </div>
-        
+
         <div className="flex flex-col justify-between flex-1 overflow-y-auto">
           <nav className="px-2 py-4">
             {navItems.map(item => (
               <a
                 key={item.id}
                 href={item.link}
-                className={`flex items-center px-4 py-3 mt-1 rounded-lg transition-colors ${
-                  activePage === item.id 
-                    ? 'bg-primary-50 text-primary-600' 
+                className={`flex items-center px-4 py-3 mt-1 rounded-lg transition-colors ${activePage === item.id
+                    ? 'bg-primary-50 text-primary-600'
                     : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 <FontAwesomeIcon icon={item.icon} className="w-5 h-5" />
                 <span className="mx-4 font-medium">{item.label}</span>
               </a>
             ))}
           </nav>
-          
+
           <div className="p-4 border-t border-gray-200">
             <a
               href="/logout"
@@ -86,7 +85,7 @@ const DashboardLayout = ({ children, activePage = 'dashboard', userType = 'candi
           </div>
         </div>
       </div>
-      
+
       {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-y-auto">
         {/* Top Bar */}
@@ -96,7 +95,7 @@ const DashboardLayout = ({ children, activePage = 'dashboard', userType = 'candi
             <button className="md:hidden text-gray-500 focus:outline-none">
               <FontAwesomeIcon icon="bars" className="h-6 w-6" />
             </button>
-            
+
             {/* Search Bar */}
             <div className="relative w-full max-w-md sm:ml-6">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
@@ -108,7 +107,7 @@ const DashboardLayout = ({ children, activePage = 'dashboard', userType = 'candi
                 placeholder="Search..."
               />
             </div>
-            
+
             {/* User Menu */}
             <div className="flex items-center">
               <button className="flex items-center text-gray-500 hover:text-gray-700 focus:outline-none">
@@ -126,7 +125,7 @@ const DashboardLayout = ({ children, activePage = 'dashboard', userType = 'candi
             </div>
           </div>
         </header>
-        
+
         {/* Page Content */}
         <main className="flex-1 p-6">
           {children}

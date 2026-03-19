@@ -18,7 +18,7 @@ const protect = asyncHandler(async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // Get user from the token
-      req.user = await User.findById(decoded.id).select('-password');
+      req.user = await User.findByPk(decoded.id, { attributes: { exclude: ['password'] } });
 
       next();
     } catch (error) {
@@ -55,7 +55,7 @@ const optionalProtect = asyncHandler(async (req, res, next) => {
     try {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select('-password');
+      req.user = await User.findByPk(decoded.id, { attributes: { exclude: ['password'] } });
     } catch (error) {
       // Invalid token — just ignore it, proceed as anonymous
       console.warn('[Auth] Optional protect: invalid token, proceeding as anonymous');

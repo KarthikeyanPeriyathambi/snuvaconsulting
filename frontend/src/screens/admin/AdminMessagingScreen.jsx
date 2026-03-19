@@ -12,25 +12,25 @@ import Message from '../../components/common/Message';
 const AdminMessagingScreen = () => {
   const { jobId } = useParams();
   const dispatch = useDispatch();
-  
+
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
   const [messageType, setMessageType] = useState(MESSAGE_TYPES[0]);
-  
+
   const jobDetails = useSelector((state) => state.jobDetails);
   const { loading: jobLoading, error: jobError, job } = jobDetails;
-  
+
   const messageCreate = useSelector((state) => state.messageCreate);
   const { loading: sendLoading, error: sendError, success: sendSuccess } = messageCreate;
-  
+
   const messageList = useSelector((state) => state.messageList);
   const { loading: messagesLoading, error: messagesError, messages } = messageList;
-  
+
   useEffect(() => {
     dispatch(getJobDetails(jobId));
     dispatch(getJobMessages(jobId));
   }, [dispatch, jobId]);
-  
+
   useEffect(() => {
     if (sendSuccess) {
       setSubject('');
@@ -39,17 +39,17 @@ const AdminMessagingScreen = () => {
       dispatch(getJobMessages(jobId));
     }
   }, [dispatch, jobId, sendSuccess]);
-  
+
   const submitHandler = (e) => {
     e.preventDefault();
-    
+
     if (!subject || !content) {
       return;
     }
-    
+
     dispatch(sendMessage(jobId, subject, content, messageType));
   };
-  
+
   // Template messages
   const messageTemplates = {
     'Interview Invitation': {
@@ -101,23 +101,23 @@ Best regards,
 [Company Name]`
     }
   };
-  
+
   const applyTemplate = (templateName) => {
     const template = messageTemplates[templateName];
     if (template) {
       let updatedSubject = template.subject;
       let updatedContent = template.content;
-      
+
       // Replace placeholders with actual data
       if (job) {
         updatedSubject = updatedSubject.replace('[Job Title]', job.title);
         updatedContent = updatedContent.replace(/\[Job Title\]/g, job.title);
         updatedContent = updatedContent.replace(/\[Company Name\]/g, job.admin?.companyName || '');
       }
-      
+
       setSubject(updatedSubject);
       setContent(updatedContent);
-      
+
       // Set appropriate message type
       if (templateName === 'Interview Invitation') {
         setMessageType('Invite');
@@ -128,14 +128,14 @@ Best regards,
       }
     }
   };
-  
+
   return (
     <div className="container mx-auto px-4 py-8">
       <Link to={`/admin/jobs/${jobId}/applications`} className="flex items-center text-blue-600 hover:text-blue-800 mb-6">
         <FontAwesomeIcon icon="arrow-left" className="mr-2" />
         Back to Applications
       </Link>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Message Form */}
         <div className="lg:col-span-2">
@@ -148,11 +148,11 @@ Best regards,
                 </p>
               )}
             </div>
-            
+
             <div className="p-6">
               {sendError && <Message variant="error">{sendError}</Message>}
               {sendSuccess && <Message variant="success">Message sent successfully!</Message>}
-              
+
               <form onSubmit={submitHandler}>
                 <div className="mb-4">
                   <label htmlFor="messageType" className="block text-gray-700 font-medium mb-2">
@@ -172,7 +172,7 @@ Best regards,
                     ))}
                   </select>
                 </div>
-                
+
                 <div className="mb-4">
                   <label htmlFor="subject" className="block text-gray-700 font-medium mb-2">
                     Subject
@@ -187,7 +187,7 @@ Best regards,
                     required
                   />
                 </div>
-                
+
                 <div className="mb-6">
                   <label htmlFor="content" className="block text-gray-700 font-medium mb-2">
                     Message Content
@@ -202,7 +202,7 @@ Best regards,
                     required
                   ></textarea>
                 </div>
-                
+
                 <div className="flex justify-end">
                   <button
                     type="submit"
@@ -226,7 +226,7 @@ Best regards,
             </div>
           </div>
         </div>
-        
+
         {/* Templates and Message History */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
@@ -243,7 +243,7 @@ Best regards,
                   <div className="font-medium text-blue-700">Interview Invitation</div>
                   <div className="text-sm text-blue-600">Invite shortlisted candidates for an interview</div>
                 </button>
-                
+
                 <button
                   type="button"
                   onClick={() => applyTemplate('Rejection')}
@@ -252,7 +252,7 @@ Best regards,
                   <div className="font-medium text-red-700">Rejection</div>
                   <div className="text-sm text-red-600">Politely decline applicants who don't match requirements</div>
                 </button>
-                
+
                 <button
                   type="button"
                   onClick={() => applyTemplate('Additional Information')}
@@ -264,12 +264,12 @@ Best regards,
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="p-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold">Recent Messages</h2>
             </div>
-            
+
             <div className="p-4">
               {messagesLoading ? (
                 <Loader />
@@ -280,19 +280,18 @@ Best regards,
               ) : (
                 <div className="space-y-4 max-h-96 overflow-y-auto">
                   {messages.map((msg) => (
-                    <div key={msg._id} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
+                    <div key={msg.id} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
                       <div className="flex justify-between items-start mb-1">
                         <div className="font-medium">{msg.subject}</div>
-                        <span className={`text-xs ${
-                          msg.type === 'Invite' ? 'bg-green-100 text-green-800' :
-                          msg.type === 'Rejection' ? 'bg-red-100 text-red-800' :
-                          'bg-blue-100 text-blue-800'
-                        } px-2 py-0.5 rounded-full`}>
+                        <span className={`text-xs ${msg.type === 'Invite' ? 'bg-green-100 text-green-800' :
+                            msg.type === 'Rejection' ? 'bg-red-100 text-red-800' :
+                              'bg-blue-100 text-blue-800'
+                          } px-2 py-0.5 rounded-full`}>
                           {msg.type}
                         </span>
                       </div>
                       <div className="text-sm text-gray-500 mb-1">
-                        {new Date(msg.createdAt).toLocaleDateString()} • 
+                        {new Date(msg.createdAt).toLocaleDateString()} •
                         {msg.recipients.length} recipients
                       </div>
                       <div className="text-sm text-gray-700 line-clamp-2">

@@ -240,7 +240,7 @@ const AdminDashboardScreen = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {jobs.slice(0, 5).map((job) => (
-                      <tr key={job._id} className="hover:bg-gray-50">
+                      <tr key={job.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{job.title}</div>
                         </td>
@@ -259,11 +259,11 @@ const AdminDashboardScreen = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <Link to={`/admin/jobs/${job._id}/applications`} className="text-blue-600 hover:text-blue-900 mr-3">
+                          <Link to={`/admin/jobs/${job.id}/applications`} className="text-blue-600 hover:text-blue-900 mr-3">
                             <FontAwesomeIcon icon="users" className="mr-1" />
                             View
                           </Link>
-                          <Link to={`/admin/jobs/${job._id}/edit`} className="text-amber-600 hover:text-amber-900">
+                          <Link to={`/admin/jobs/${job.id}/edit`} className="text-amber-600 hover:text-amber-900">
                             <FontAwesomeIcon icon="edit" className="mr-1" />
                             Edit
                           </Link>
@@ -300,7 +300,7 @@ const AdminDashboardScreen = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {stats.recentResumes.map((resume) => (
-                      <tr key={resume._id} className="hover:bg-gray-50">
+                      <tr key={resume.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{resume.name}</div>
                         </td>
@@ -312,8 +312,8 @@ const AdminDashboardScreen = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${resume.resumeScore >= 70 ? 'bg-green-100 text-green-800' :
-                              resume.resumeScore >= 40 ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
+                            resume.resumeScore >= 40 ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
                             }`}>
                             {resume.resumeScore || 0}%
                           </span>

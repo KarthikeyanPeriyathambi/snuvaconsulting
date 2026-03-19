@@ -99,7 +99,7 @@ const AdminJobApplicationsScreen = () => {
 
   const handleStatusUpdate = () => {
     if (selectedApplication && statusToUpdate) {
-      dispatch(updateApplicationStatus(jobId, selectedApplication._id, statusToUpdate));
+      dispatch(updateApplicationStatus(jobId, selectedApplication.id, statusToUpdate));
       setShowStatusModal(false);
     }
   };
@@ -244,7 +244,7 @@ const AdminJobApplicationsScreen = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filtered.map((app) => (
-                  <tr key={app._id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={app.id} className="hover:bg-gray-50 transition-colors">
                     {/* Candidate */}
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">

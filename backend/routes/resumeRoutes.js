@@ -5,6 +5,8 @@ import {
   getResumeById,
   getUserResumes,
   serveResumeFile,
+  improveResume,
+  saveImprovedResume,
 } from '../controllers/resumeController.js';
 import { protect, optionalProtect } from '../middleware/authMiddleware.js';
 import { upload } from '../config/cloudinaryConfig.js';
@@ -21,7 +23,13 @@ router.route('/:id')
 router.route('/:id/file')
   .get(protect, serveResumeFile);
 
+router.route('/:id/improved')
+  .put(protect, saveImprovedResume);
+
 router.route('/:id/chatbot-response')
   .post(addChatbotResponse);
+
+router.route('/:id/improve')
+  .post(protect, improveResume);
 
 export default router;

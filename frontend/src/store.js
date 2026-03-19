@@ -21,6 +21,8 @@ import {
   resumeUploadReducer,
   resumeDetailsReducer,
   resumeChatbotResponseReducer,
+  resumeImproveReducer,
+  resumeSaveImprovedReducer,
 } from './reducers/resumeReducers';
 import {
   messageCreateReducer,
@@ -49,6 +51,8 @@ const reducer = combineReducers({
   resumeUpload: resumeUploadReducer,
   resumeDetails: resumeDetailsReducer,
   resumeChatbotResponse: resumeChatbotResponseReducer,
+  resumeImprove: resumeImproveReducer,
+  resumeSaveImproved: resumeSaveImprovedReducer,
 
   messageCreate: messageCreateReducer,
   messageList: messageListReducer,

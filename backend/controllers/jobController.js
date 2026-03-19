@@ -1,6 +1,6 @@
 import asyncHandler from 'express-async-handler';
-import Job from '../models/jobModel.js';
-import Resume from '../models/resumeModel.js';
+import { Op } from 'sequelize';
+import { User, Job, Resume, Application, JobSelection, RequisitionDetails, Skill, SkillQuestion, Compliance } from '../models/index.js';
 import matchingAlgorithm from '../utils/matchingAlgorithm.js';
 
 // @desc    Create a new job posting
@@ -29,7 +29,7 @@ const createJob = asyncHandler(async (req, res) => {
 
   // Create job
   const job = await Job.create({
-    admin: req.user._id,
+    adminId: req.user.id,
     title,
     description,
     requiredSkills: Array.isArray(requiredSkills) ? requiredSkills : requiredSkills.split(',').map(skill => skill.trim()),
@@ -56,57 +56,113 @@ const createJob = asyncHandler(async (req, res) => {
 // @route   GET /api/jobs
 // @access  Public
 const getJobs = asyncHandler(async (req, res) => {
-  // Get query parameters for filtering
   const { search, location, jobType, experienceLevel } = req.query;
 
-  // Build filter object
-  const filter = {};
+  const whereClause = { status: 'Open' };
 
-  // Only show open jobs
-  filter.status = 'Open';
-
-  // Add search filter (title or description)
   if (search) {
-    filter.$or = [
-      { title: { $regex: search, $options: 'i' } },
-      { description: { $regex: search, $options: 'i' } },
+    whereClause[Op.or] = [
+      { title: { [Op.like]: `%${search}%` } },
+      { description: { [Op.like]: `%${search}%` } },
     ];
   }
-
-  // Add location filter
   if (location) {
-    filter.location = { $regex: location, $options: 'i' };
+    whereClause.location = { [Op.like]: `%${location}%` };
   }
-
-  // Add job type filter
   if (jobType) {
-    filter.jobType = jobType;
+    whereClause.jobType = jobType;
   }
-
-  // Add experience level filter
   if (experienceLevel) {
-    filter.experienceLevel = experienceLevel;
+    whereClause.experienceLevel = experienceLevel;
   }
 
-  // Get jobs with pagination
+  // Fetch local jobs
+  const localJobs = await Job.findAll({
+    where: whereClause,
+    include: [{ model: User, as: 'admin', attributes: ['name', 'companyName', 'companyLogo'] }]
+  });
+
+  // Fetch imported jobs
+  let importedJobs = await JobSelection.findAll({
+    include: [{ model: RequisitionDetails, as: 'details' }]
+  });
+
+  const today = new Date();
+  const formatDate = (date) => {
+    if (!date) return null;
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return null;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const todayStr = formatDate(today);
+
+  let formattedImported = importedJobs.map(j => {
+    const details = j.details || {};
+    return {
+      id: `req_${j.job_selection_id}`,
+      title: details.title_role || j.requisition_class,
+      description: details.complete_description || details.short_description || '',
+      location: details.work_location || 'Remote',
+      salary: details.bill_rate_low ? `$${details.bill_rate_low} - $${details.bill_rate_high}` : 'Not specified',
+      jobType: details.engagement_type || 'Contract',
+      experienceLevel: 'Mid-level',
+      numberOfOpenings: details.no_of_openings || 1,
+      createdAt: details.start_date || new Date(),
+      endDate: details.end_date,
+      status: details.req_status === 'Open' ? 'Open' : 'Closed',
+      admin: {
+        companyName: details.region_name || 'Organization',
+        companyLogo: null
+      }
+    };
+  }).filter(j => {
+    const isActive = j.status === 'Open';
+
+    // Convert dates to YYYY-MM-DD (local time) for accurate comparison
+    const startDateStr = formatDate(j.createdAt);
+    const endDateStr = formatDate(j.endDate);
+
+    const started = !startDateStr || startDateStr <= todayStr;
+    const notExpired = !endDateStr || endDateStr >= todayStr;
+
+    return isActive && started && notExpired;
+  });
+
+  // Apply filters to imported jobs manually
+  if (search) {
+    const searchLower = search.toLowerCase();
+    formattedImported = formattedImported.filter(j =>
+      j.title.toLowerCase().includes(searchLower) || j.description.toLowerCase().includes(searchLower)
+    );
+  }
+  if (location) {
+    const locationLower = location.toLowerCase();
+    formattedImported = formattedImported.filter(j => j.location.toLowerCase().includes(locationLower));
+  }
+  if (jobType) {
+    // Basic mapping or exact match
+    formattedImported = formattedImported.filter(j => j.jobType.toLowerCase() === jobType.toLowerCase() || j.jobType.includes(jobType));
+  }
+
+  // Combine all jobs
+  let allJobs = [...localJobs, ...formattedImported];
+
+  // Sort by createdAt DESC
+  allJobs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  // Pagination
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  const jobs = await Job.find(filter)
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .populate('admin', 'name companyName companyLogo');
-
-  // Get total count for pagination
-  const count = await Job.countDocuments(filter);
+  const paginatedJobs = allJobs.slice(skip, skip + limit);
 
   res.json({
-    jobs,
+    jobs: paginatedJobs,
     page,
-    pages: Math.ceil(count / limit),
-    total: count,
+    pages: Math.ceil(allJobs.length / limit),
+    total: allJobs.length,
   });
 });
 
@@ -114,8 +170,56 @@ const getJobs = asyncHandler(async (req, res) => {
 // @route   GET /api/jobs/:id
 // @access  Public
 const getJobById = asyncHandler(async (req, res) => {
-  const job = await Job.findById(req.params.id)
-    .populate('admin', 'name companyName companyLogo companyDescription');
+  const jobId = req.params.id;
+
+  if (jobId.startsWith('req_')) {
+    const actId = jobId.replace('req_', '');
+    const jobSelection = await JobSelection.findByPk(actId, {
+      include: [
+        { model: RequisitionDetails, as: 'details' },
+        { model: Skill, as: 'skills' },
+        { model: SkillQuestion, as: 'questions' },
+        { model: Compliance, as: 'compliance' }
+      ]
+    });
+
+    if (jobSelection) {
+      const details = jobSelection.details || {};
+      const jobObj = {
+        id: jobId,
+        title: details.title_role || jobSelection.requisition_class,
+        description: details.complete_description || details.short_description || '',
+        location: details.work_location || 'Remote',
+        salary: details.bill_rate_low ? `$${details.bill_rate_low} - $${details.bill_rate_high}` : 'Not specified',
+        jobType: details.engagement_type || 'Contract',
+        experienceLevel: 'Mid-level',
+        numberOfOpenings: details.no_of_openings || 1,
+        createdAt: details.start_date || new Date(),
+        status: details.req_status,
+        requiredSkills: jobSelection.skills ? jobSelection.skills.map(s => s.skill) : [],
+        jobRequirements: [],
+        chatbotQuestions: jobSelection.questions ? jobSelection.questions.map(q => q.question_text) : [],
+        extraDetails: {
+          compliance: jobSelection.compliance
+        },
+        admin: {
+          name: 'Admin',
+          companyName: details.region_name || 'Organization',
+          companyLogo: null,
+          companyDescription: details.region_description || ''
+        }
+      };
+      return res.json(jobObj);
+    }
+  }
+
+  const job = await Job.findByPk(jobId, {
+    include: [{
+      model: User,
+      as: 'admin',
+      attributes: ['name', 'companyName', 'companyLogo', 'companyDescription'],
+    }],
+  });
 
   if (job) {
     res.json(job);
@@ -129,7 +233,7 @@ const getJobById = asyncHandler(async (req, res) => {
 // @route   PUT /api/jobs/:id
 // @access  Private/Admin
 const updateJob = asyncHandler(async (req, res) => {
-  const job = await Job.findById(req.params.id);
+  const job = await Job.findByPk(req.params.id);
 
   if (!job) {
     res.status(404);
@@ -137,7 +241,7 @@ const updateJob = asyncHandler(async (req, res) => {
   }
 
   // Check if the user is the admin who created the job
-  if (job.admin.toString() !== req.user._id.toString()) {
+  if (job.adminId !== req.user.id) {
     res.status(401);
     throw new Error('Not authorized to update this job');
   }
@@ -165,7 +269,7 @@ const updateJob = asyncHandler(async (req, res) => {
 // @route   DELETE /api/jobs/:id
 // @access  Private/Admin
 const deleteJob = asyncHandler(async (req, res) => {
-  const job = await Job.findById(req.params.id);
+  const job = await Job.findByPk(req.params.id);
 
   if (!job) {
     res.status(404);
@@ -173,12 +277,12 @@ const deleteJob = asyncHandler(async (req, res) => {
   }
 
   // Check if the user is the admin who created the job
-  if (job.admin.toString() !== req.user._id.toString()) {
+  if (job.adminId !== req.user.id) {
     res.status(401);
     throw new Error('Not authorized to delete this job');
   }
 
-  await job.remove();
+  await job.destroy();
 
   res.json({ message: 'Job removed' });
 });
@@ -194,8 +298,8 @@ const applyForJob = asyncHandler(async (req, res) => {
     throw new Error('Please provide a resume ID');
   }
 
-  const job = await Job.findById(req.params.id);
-  const resume = await Resume.findById(resumeId);
+  const job = await Job.findByPk(req.params.id);
+  const resume = await Resume.findByPk(resumeId);
 
   if (!job) {
     res.status(404);
@@ -208,9 +312,12 @@ const applyForJob = asyncHandler(async (req, res) => {
   }
 
   // Check if already applied
-  const alreadyApplied = job.applications.find(
-    (app) => app.resume.toString() === resumeId
-  );
+  const alreadyApplied = await Application.findOne({
+    where: {
+      jobId: job.id,
+      resumeId: resumeId,
+    },
+  });
 
   if (alreadyApplied) {
     res.status(400);
@@ -220,18 +327,20 @@ const applyForJob = asyncHandler(async (req, res) => {
   // Calculate match score
   const matchResult = await matchingAlgorithm.calculateMatchScore(resume, job);
 
-  // Add application to job
-  job.applications.push({
-    resume: resumeId,
+  // Create application
+  const application = await Application.create({
+    jobId: job.id,
+    resumeId: resumeId,
     matchScore: matchResult.matchScore,
     skillMatchScore: matchResult.skillMatchScore,
     experienceMatchScore: matchResult.experienceMatchScore,
     educationMatchScore: matchResult.educationMatchScore,
     llmReasoning: matchResult.llmReasoning,
+    projectsMatchScore: matchResult.projectsMatchScore,
+    matchedSkills: matchResult.matchedSkills,
+    missingSkills: matchResult.missingSkills,
     status: 'Applied',
   });
-
-  await job.save();
 
   res.status(201).json({
     message: 'Application submitted successfully',
@@ -243,7 +352,13 @@ const applyForJob = asyncHandler(async (req, res) => {
 // @route   GET /api/jobs/:id/applications
 // @access  Private/Admin
 const getJobApplications = asyncHandler(async (req, res) => {
-  const job = await Job.findById(req.params.id);
+  const job = await Job.findByPk(req.params.id, {
+    include: [{
+      model: User,
+      as: 'admin',
+      attributes: ['id', 'name'],
+    }],
+  });
 
   if (!job) {
     res.status(404);
@@ -251,19 +366,22 @@ const getJobApplications = asyncHandler(async (req, res) => {
   }
 
   // Check if the user is the admin who created the job
-  if (job.admin.toString() !== req.user._id.toString()) {
+  if (job.adminId !== req.user.id) {
     res.status(401);
     throw new Error('Not authorized to view these applications');
   }
 
-  // Populate resume data for each application
-  await job.populate({
-    path: 'applications.resume',
-    select: 'name email phone skills education experience projects chatbotResponses preferredLanguage resumeScore resumeUrl appliedJobId appliedJobTitle',
+  // Get all applications with resume data
+  const applications = await Application.findAll({
+    where: { jobId: job.id },
+    include: [{
+      model: Resume,
+      as: 'resume',
+      attributes: ['id', 'name', 'email', 'phone', 'skills', 'education', 'experience', 'projects', 'chatbotResponses', 'preferredLanguage', 'resumeScore', 'resumeUrl', 'appliedJobId', 'appliedJobTitle'],
+    }],
   });
 
-  res.json(job.applications);
-
+  res.json(applications);
 });
 
 // @desc    Update application status
@@ -277,7 +395,13 @@ const updateApplicationStatus = asyncHandler(async (req, res) => {
     throw new Error('Please provide a status');
   }
 
-  const job = await Job.findById(req.params.id);
+  const job = await Job.findByPk(req.params.id, {
+    include: [{
+      model: User,
+      as: 'admin',
+      attributes: ['id', 'name'],
+    }],
+  });
 
   if (!job) {
     res.status(404);
@@ -285,13 +409,13 @@ const updateApplicationStatus = asyncHandler(async (req, res) => {
   }
 
   // Check if the user is the admin who created the job
-  if (job.admin.toString() !== req.user._id.toString()) {
+  if (job.adminId !== req.user.id) {
     res.status(401);
     throw new Error('Not authorized to update this application');
   }
 
-  // Find the application by ID
-  const application = job.applications.id(req.params.applicationId);
+  // Find the application
+  const application = await Application.findByPk(req.params.applicationId);
 
   if (!application) {
     res.status(404);
@@ -300,8 +424,7 @@ const updateApplicationStatus = asyncHandler(async (req, res) => {
 
   // Update status
   application.status = status;
-
-  await job.save();
+  await application.save();
 
   res.json({
     message: 'Application status updated',

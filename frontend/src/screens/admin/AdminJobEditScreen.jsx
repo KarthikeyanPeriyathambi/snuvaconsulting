@@ -10,7 +10,7 @@ import Message from '../../components/common/Message';
 
 const AdminJobEditScreen = () => {
   const { id: jobId } = useParams();
-  
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [requiredSkills, setRequiredSkills] = useState('');
@@ -25,22 +25,22 @@ const AdminJobEditScreen = () => {
   const [chatbotQuestions, setChatbotQuestions] = useState([]);
   const [newQuestion, setNewQuestion] = useState('');
   const [isNewQuestionRequired, setIsNewQuestionRequired] = useState(true);
-  
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
   const jobDetails = useSelector((state) => state.jobDetails);
   const { loading, error, job } = jobDetails;
-  
+
   const jobUpdate = useSelector((state) => state.jobUpdate);
   const { loading: updateLoading, error: updateError, success: updateSuccess } = jobUpdate;
-  
+
   useEffect(() => {
     if (updateSuccess) {
       dispatch({ type: JOB_UPDATE_RESET });
       navigate('/admin/jobs');
     } else {
-      if (!job.title || job._id !== jobId) {
+      if (!job.title || String(job.id) !== String(jobId)) {
         dispatch(getJobDetails(jobId));
       } else {
         setTitle(job.title);
@@ -58,12 +58,12 @@ const AdminJobEditScreen = () => {
       }
     }
   }, [dispatch, navigate, jobId, job, updateSuccess]);
-  
+
   const submitHandler = (e) => {
     e.preventDefault();
-    
+
     const jobData = {
-      _id: jobId,
+      id: jobId,
       title,
       description,
       requiredSkills: requiredSkills.split(',').map(skill => skill.trim()),
@@ -77,10 +77,10 @@ const AdminJobEditScreen = () => {
       status,
       chatbotQuestions,
     };
-    
+
     dispatch(updateJob(jobData));
   };
-  
+
   const addQuestion = () => {
     if (newQuestion.trim() !== '') {
       setChatbotQuestions([
@@ -94,23 +94,23 @@ const AdminJobEditScreen = () => {
       setIsNewQuestionRequired(true);
     }
   };
-  
+
   const removeQuestion = (index) => {
     setChatbotQuestions(chatbotQuestions.filter((_, i) => i !== index));
   };
-  
+
   return (
     <div className="container mx-auto px-4 py-8">
       <Link to="/admin/jobs" className="flex items-center text-blue-600 hover:text-blue-800 mb-6">
         <FontAwesomeIcon icon="arrow-left" className="mr-2" />
         Back to Jobs
       </Link>
-      
+
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="p-6 border-b border-gray-200">
           <h1 className="text-3xl font-bold">Edit Job Posting</h1>
         </div>
-        
+
         {loading ? (
           <div className="p-6">
             <Loader />
@@ -122,7 +122,7 @@ const AdminJobEditScreen = () => {
         ) : (
           <div className="p-6">
             {updateError && <Message variant="error">{updateError}</Message>}
-            
+
             <div className="flex justify-between mb-6">
               <h2 className="text-xl font-semibold">Job ID: {jobId}</h2>
               <Link to={`/admin/jobs/${jobId}/applications`} className="btn btn-secondary">
@@ -130,7 +130,7 @@ const AdminJobEditScreen = () => {
                 View Applications
               </Link>
             </div>
-            
+
             <form onSubmit={submitHandler}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
@@ -147,7 +147,7 @@ const AdminJobEditScreen = () => {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="location" className="block text-gray-700 font-medium mb-2">
                     Location *
@@ -163,7 +163,7 @@ const AdminJobEditScreen = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="mb-6">
                 <label htmlFor="description" className="block text-gray-700 font-medium mb-2">
                   Job Description *
@@ -178,7 +178,7 @@ const AdminJobEditScreen = () => {
                   required
                 ></textarea>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <label htmlFor="requiredSkills" className="block text-gray-700 font-medium mb-2">
@@ -194,7 +194,7 @@ const AdminJobEditScreen = () => {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="salary" className="block text-gray-700 font-medium mb-2">
                     Salary Range
@@ -209,7 +209,7 @@ const AdminJobEditScreen = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div>
                   <label htmlFor="jobType" className="block text-gray-700 font-medium mb-2">
@@ -229,7 +229,7 @@ const AdminJobEditScreen = () => {
                     ))}
                   </select>
                 </div>
-                
+
                 <div>
                   <label htmlFor="experienceLevel" className="block text-gray-700 font-medium mb-2">
                     Experience Level *
@@ -248,7 +248,7 @@ const AdminJobEditScreen = () => {
                     ))}
                   </select>
                 </div>
-                
+
                 <div>
                   <label htmlFor="status" className="block text-gray-700 font-medium mb-2">
                     Status *
@@ -266,7 +266,7 @@ const AdminJobEditScreen = () => {
                   </select>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <label htmlFor="numberOfOpenings" className="block text-gray-700 font-medium mb-2">
@@ -282,7 +282,7 @@ const AdminJobEditScreen = () => {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="numberOfCandidatesToShortlist" className="block text-gray-700 font-medium mb-2">
                     Candidates to Shortlist *
@@ -298,7 +298,7 @@ const AdminJobEditScreen = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="mb-6">
                 <label htmlFor="jobRequirements" className="block text-gray-700 font-medium mb-2">
                   Job Requirements (One per line)
@@ -312,7 +312,7 @@ const AdminJobEditScreen = () => {
                   rows="4"
                 ></textarea>
               </div>
-              
+
               <div className="mb-6">
                 <label className="block text-gray-700 font-medium mb-2">
                   Chatbot Questions
@@ -320,7 +320,7 @@ const AdminJobEditScreen = () => {
                 <p className="text-gray-600 mb-3 text-sm">
                   These questions will be asked to candidates during the application process.
                 </p>
-                
+
                 <ul className="mb-4 space-y-2">
                   {chatbotQuestions.map((q, index) => (
                     <li key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
@@ -340,7 +340,7 @@ const AdminJobEditScreen = () => {
                     </li>
                   ))}
                 </ul>
-                
+
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="flex-grow">
                     <input
@@ -372,7 +372,7 @@ const AdminJobEditScreen = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="border-t border-gray-200 pt-6 flex justify-end">
                 <Link to="/admin/jobs" className="btn btn-ghost border border-gray-300 mr-4">
                   Cancel

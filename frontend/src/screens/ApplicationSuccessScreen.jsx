@@ -9,19 +9,19 @@ import Message from '../components/common/Message';
 const ApplicationSuccessScreen = () => {
   const { jobId } = useParams();
   const dispatch = useDispatch();
-  
+
   const jobDetails = useSelector((state) => state.jobDetails);
   const { loading, error, job } = jobDetails;
-  
+
   const jobApplicationCreate = useSelector((state) => state.jobApplicationCreate);
   const { application } = jobApplicationCreate;
-  
+
   useEffect(() => {
-    if (!job._id || job._id !== jobId) {
+    if (!job.id || String(job.id) !== String(jobId)) {
       dispatch(getJobDetails(jobId));
     }
-  }, [dispatch, job._id, jobId]);
-  
+  }, [dispatch, job.id, jobId]);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-md mx-auto text-center">
@@ -34,19 +34,19 @@ const ApplicationSuccessScreen = () => {
             <div className="bg-green-100 text-green-700 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
               <FontAwesomeIcon icon="check" className="text-4xl" />
             </div>
-            
+
             <h1 className="text-3xl font-bold text-gray-900 mb-4">Application Submitted!</h1>
-            
+
             <p className="text-gray-700 mb-6">
               Your application for <span className="font-semibold">{job.title}</span> at <span className="font-semibold">{job.admin && job.admin.companyName}</span> has been successfully submitted.
             </p>
-            
+
             {application && application.matchScore && (
               <div className="mb-6">
                 <p className="text-gray-700 mb-2">Your match score:</p>
                 <div className="bg-gray-100 rounded-full h-4 mb-2">
-                  <div 
-                    className="bg-blue-600 h-4 rounded-full" 
+                  <div
+                    className="bg-blue-600 h-4 rounded-full"
                     style={{ width: `${Math.min(100, Math.round(application.matchScore))}%` }}
                   ></div>
                 </div>
@@ -55,7 +55,7 @@ const ApplicationSuccessScreen = () => {
                 </p>
               </div>
             )}
-            
+
             <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 text-left">
               <h3 className="font-semibold text-blue-800 mb-2">What happens next?</h3>
               <ul className="text-blue-700 text-sm space-y-2">
@@ -73,7 +73,7 @@ const ApplicationSuccessScreen = () => {
                 </li>
               </ul>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/jobs" className="btn btn-primary flex-1">
                 <FontAwesomeIcon icon="search" className="mr-2" />

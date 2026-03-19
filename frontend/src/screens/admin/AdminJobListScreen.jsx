@@ -96,7 +96,7 @@ const AdminJobListScreen = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {jobs.map((job) => (
-                  <tr key={job._id} className="hover:bg-gray-50">
+                  <tr key={job.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{job.title}</div>
                     </td>
@@ -128,20 +128,20 @@ const AdminJobListScreen = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link to={`/admin/jobs/${job._id}/applications`} className="text-blue-600 hover:text-blue-900 mr-3">
+                      <Link to={`/admin/jobs/${job.id}/applications`} className="text-blue-600 hover:text-blue-900 mr-3">
                         <FontAwesomeIcon icon="users" className="mr-1" />
                         Applications
                       </Link>
-                      <Link to={`/admin/messaging/${job._id}`} className="text-purple-600 hover:text-purple-900 mr-3">
+                      <Link to={`/admin/messaging/${job.id}`} className="text-purple-600 hover:text-purple-900 mr-3">
                         <FontAwesomeIcon icon="comment" className="mr-1" />
                         Message
                       </Link>
-                      <Link to={`/admin/jobs/${job._id}/edit`} className="text-amber-600 hover:text-amber-900 mr-3">
+                      <Link to={`/admin/jobs/${job.id}/edit`} className="text-amber-600 hover:text-amber-900 mr-3">
                         <FontAwesomeIcon icon="edit" className="mr-1" />
                         Edit
                       </Link>
                       <button
-                        onClick={() => openDeleteModal(job._id)}
+                        onClick={() => openDeleteModal(job.id)}
                         className="text-red-600 hover:text-red-900"
                       >
                         <FontAwesomeIcon icon="trash" className="mr-1" />

@@ -1,114 +1,87 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
-const jobSchema = mongoose.Schema(
-  {
-    admin: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    title: {
-      type: String,
-      required: true,
-    },
-    description: {
-      type: String,
-      required: true,
-    },
-    requiredSkills: [
-      {
-        type: String,
-        required: true,
-      },
-    ],
-    location: {
-      type: String,
-      required: true,
-    },
-    salary: {
-      type: String,
-    },
-    jobType: {
-      type: String,
-      enum: ['Full-time', 'Part-time', 'Contract', 'Internship', 'Remote'],
-      required: true,
-    },
-    experienceLevel: {
-      type: String,
-      enum: ['Entry-level', 'Mid-level', 'Senior', 'Executive'],
-      required: true,
-    },
-    numberOfOpenings: {
-      type: Number,
-      required: true,
-      default: 1,
-    },
-    numberOfCandidatesToShortlist: {
-      type: Number,
-      required: true,
-      default: 5,
-    },
-    jobRequirements: [
-      {
-        type: String,
-      },
-    ],
-    status: {
-      type: String,
-      enum: ['Open', 'Closed', 'Draft'],
-      default: 'Open',
-    },
-    applications: [
-      {
-        resume: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Resume',
-        },
-        matchScore: {
-          type: Number,
-          default: 0,
-        },
-        skillMatchScore: {
-          type: Number,
-          default: 0,
-        },
-        experienceMatchScore: {
-          type: Number,
-          default: 0,
-        },
-        educationMatchScore: {
-          type: Number,
-          default: 0,
-        },
-        llmReasoning: {
-          type: String,
-        },
-        status: {
-          type: String,
-          enum: ['Applied', 'Shortlisted', 'Rejected', 'Interviewing', 'Hired'],
-          default: 'Applied',
-        },
-        appliedAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
-    chatbotQuestions: [
-      {
-        question: String,
-        isRequired: {
-          type: Boolean,
-          default: true,
-        },
-      },
-    ],
+const Job = sequelize.define('Job', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
   },
-  {
-    timestamps: true,
-  }
-);
-
-const Job = mongoose.model('Job', jobSchema);
+  adminId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'Users',
+      key: 'id',
+    },
+  },
+  title: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  description: {
+    type: DataTypes.TEXT,
+    allowNull: false,
+  },
+  requiredSkills: {
+    type: DataTypes.JSON,
+    allowNull: false,
+    get() {
+      const rawValue = this.getDataValue('requiredSkills');
+      if (!rawValue) return [];
+      return typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue;
+    },
+  },
+  location: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  salary: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  jobType: {
+    type: DataTypes.ENUM('Full-time', 'Part-time', 'Contract', 'Internship', 'Remote'),
+    allowNull: false,
+  },
+  experienceLevel: {
+    type: DataTypes.ENUM('Entry-level', 'Mid-level', 'Senior', 'Executive'),
+    allowNull: false,
+  },
+  numberOfOpenings: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+  },
+  numberOfCandidatesToShortlist: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 5,
+  },
+  jobRequirements: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    get() {
+      const rawValue = this.getDataValue('jobRequirements');
+      if (!rawValue) return [];
+      return typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue;
+    },
+  },
+  status: {
+    type: DataTypes.ENUM('Open', 'Closed', 'Draft'),
+    defaultValue: 'Open',
+  },
+  chatbotQuestions: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    get() {
+      const rawValue = this.getDataValue('chatbotQuestions');
+      if (!rawValue) return [];
+      return typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue;
+    },
+  },
+}, {
+  timestamps: true,
+});
 
 export default Job;

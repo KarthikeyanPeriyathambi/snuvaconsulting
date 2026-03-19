@@ -1,48 +1,54 @@
 import asyncHandler from 'express-async-handler';
-import Job from '../models/jobModel.js';
-import User from '../models/userModel.js';
-import Resume from '../models/resumeModel.js';
+import { User, Job, Application, Message, Resume } from '../models/index.js';
 
 // @desc    Get admin dashboard stats  (GLOBAL — all admins' jobs + all resumes)
 // @route   GET /api/admin/dashboard
 // @access  Private/Admin
 const getAdminDashboardStats = asyncHandler(async (req, res) => {
   // ── Jobs: ALL jobs in the system ─────────────────────────────────────────
-  const jobs = await Job.find({});
+  const jobs = await Job.findAll({
+    include: [{
+      model: Application,
+      as: 'applications',
+      attributes: ['status', 'matchScore'],
+    }],
+  });
 
   const totalJobs = jobs.length;
   const openJobs = jobs.filter(j => j.status === 'Open').length;
   const closedJobs = jobs.filter(j => j.status === 'Closed').length;
 
-  // Applications embedded in Job documents
-  const totalApplications = jobs.reduce((acc, job) => acc + job.applications.length, 0);
+  // Applications from separate table
+  const totalApplications = jobs.reduce((acc, job) => acc + (job.applications ? job.applications.length : 0), 0);
 
   const applicationsByStatus = { Applied: 0, Shortlisted: 0, Rejected: 0, Interviewing: 0, Hired: 0 };
   let totalMatchScore = 0;
   let matchScoreCount = 0;
 
   jobs.forEach(job => {
-    job.applications.forEach(app => {
-      if (applicationsByStatus[app.status] !== undefined) {
-        applicationsByStatus[app.status]++;
-      }
-      if (app.matchScore) {
-        totalMatchScore += app.matchScore;
-        matchScoreCount++;
-      }
-    });
+    if (job.applications) {
+      job.applications.forEach(app => {
+        if (applicationsByStatus[app.status] !== undefined) {
+          applicationsByStatus[app.status]++;
+        }
+        if (app.matchScore) {
+          totalMatchScore += app.matchScore;
+          matchScoreCount++;
+        }
+      });
+    }
   });
 
   const averageMatchScore =
     matchScoreCount > 0 ? (totalMatchScore / matchScoreCount).toFixed(2) : 0;
 
   // ── Resumes: ALL uploads from the Resume collection ──────────────────────
-  const resumes = await Resume.find({})
-    .sort({ createdAt: -1 })
-    .limit(10)
-    .populate('user', 'name email');
+  const resumes = await Resume.findAll({
+    limit: 10,
+    order: [['createdAt', 'DESC']],
+  });
 
-  const totalResumes = await Resume.countDocuments({});
+  const totalResumes = await Resume.count();
 
   // ── Return ────────────────────────────────────────────────────────────────
   res.json({
@@ -61,16 +67,21 @@ const getAdminDashboardStats = asyncHandler(async (req, res) => {
 // @route   GET /api/admin/jobs
 // @access  Private/Admin
 const getAdminJobs = asyncHandler(async (req, res) => {
-  const jobs = await Job.find({})
-    .sort({ createdAt: -1 })
-    .populate('admin', 'name companyName');
+  const jobs = await Job.findAll({
+    include: [{
+      model: User,
+      as: 'admin',
+      attributes: ['name', 'companyName'],
+    }],
+    order: [['createdAt', 'DESC']],
+  });
 
-  const jobsWithCounts = jobs.map(job => {
-    const applicationCount = job.applications.length;
-    const shortlistedCount = job.applications.filter(a => a.status === 'Shortlisted').length;
+  const jobsWithCounts = await Promise.all(jobs.map(async job => {
+    const applicationCount = await Application.count({ where: { jobId: job.id } });
+    const shortlistedCount = await Application.count({ where: { jobId: job.id, status: 'Shortlisted' } });
 
     return {
-      _id: job._id,
+      id: job.id,
       title: job.title,
       location: job.location,
       jobType: job.jobType,
@@ -78,11 +89,10 @@ const getAdminJobs = asyncHandler(async (req, res) => {
       createdAt: job.createdAt,
       applicationCount,
       shortlistedCount,
-      // owner info so dashboard can display it
       adminName: job.admin?.name,
       companyName: job.admin?.companyName,
     };
-  });
+  }));
 
   res.json(jobsWithCounts);
 });
@@ -91,9 +101,9 @@ const getAdminJobs = asyncHandler(async (req, res) => {
 // @route   GET /api/admin/resumes
 // @access  Private/Admin
 const getAdminResumes = asyncHandler(async (req, res) => {
-  const resumes = await Resume.find({})
-    .sort({ createdAt: -1 })
-    .populate('user', 'name email');
+  const resumes = await Resume.findAll({
+    order: [['createdAt', 'DESC']],
+  });
 
   res.json(resumes);
 });

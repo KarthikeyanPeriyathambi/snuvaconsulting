@@ -22,25 +22,25 @@ const AdminJobCreateScreen = () => {
   const [chatbotQuestions, setChatbotQuestions] = useState(DEFAULT_CHATBOT_QUESTIONS);
   const [newQuestion, setNewQuestion] = useState('');
   const [isNewQuestionRequired, setIsNewQuestionRequired] = useState(true);
-  
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
   const jobCreate = useSelector((state) => state.jobCreate);
   const { loading, error, success, job } = jobCreate;
-  
+
   useEffect(() => {
     // Reset job create state when component mounts
     dispatch({ type: JOB_CREATE_RESET });
-    
+
     if (success) {
-      navigate(`/admin/jobs/${job._id}/edit`);
+      navigate(`/admin/jobs/${job.id}/edit`);
     }
   }, [dispatch, navigate, success, job]);
-  
+
   const submitHandler = (e) => {
     e.preventDefault();
-    
+
     const jobData = {
       title,
       description,
@@ -54,10 +54,10 @@ const AdminJobCreateScreen = () => {
       jobRequirements: jobRequirements.split('\n').filter(req => req.trim() !== ''),
       chatbotQuestions,
     };
-    
+
     dispatch(createJob(jobData));
   };
-  
+
   const addQuestion = () => {
     if (newQuestion.trim() !== '') {
       setChatbotQuestions([
@@ -71,26 +71,26 @@ const AdminJobCreateScreen = () => {
       setIsNewQuestionRequired(true);
     }
   };
-  
+
   const removeQuestion = (index) => {
     setChatbotQuestions(chatbotQuestions.filter((_, i) => i !== index));
   };
-  
+
   return (
     <div className="container mx-auto px-4 py-8">
       <Link to="/admin/jobs" className="flex items-center text-blue-600 hover:text-blue-800 mb-6">
         <FontAwesomeIcon icon="arrow-left" className="mr-2" />
         Back to Jobs
       </Link>
-      
+
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="p-6 border-b border-gray-200">
           <h1 className="text-3xl font-bold">Create New Job Posting</h1>
         </div>
-        
+
         <div className="p-6">
           {error && <Message variant="error">{error}</Message>}
-          
+
           <form onSubmit={submitHandler}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
@@ -107,7 +107,7 @@ const AdminJobCreateScreen = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="location" className="block text-gray-700 font-medium mb-2">
                   Location *
@@ -123,7 +123,7 @@ const AdminJobCreateScreen = () => {
                 />
               </div>
             </div>
-            
+
             <div className="mb-6">
               <label htmlFor="description" className="block text-gray-700 font-medium mb-2">
                 Job Description *
@@ -138,7 +138,7 @@ const AdminJobCreateScreen = () => {
                 required
               ></textarea>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label htmlFor="requiredSkills" className="block text-gray-700 font-medium mb-2">
@@ -154,7 +154,7 @@ const AdminJobCreateScreen = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="salary" className="block text-gray-700 font-medium mb-2">
                   Salary Range
@@ -169,7 +169,7 @@ const AdminJobCreateScreen = () => {
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label htmlFor="jobType" className="block text-gray-700 font-medium mb-2">
@@ -189,7 +189,7 @@ const AdminJobCreateScreen = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div>
                 <label htmlFor="experienceLevel" className="block text-gray-700 font-medium mb-2">
                   Experience Level *
@@ -209,7 +209,7 @@ const AdminJobCreateScreen = () => {
                 </select>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label htmlFor="numberOfOpenings" className="block text-gray-700 font-medium mb-2">
@@ -225,7 +225,7 @@ const AdminJobCreateScreen = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="numberOfCandidatesToShortlist" className="block text-gray-700 font-medium mb-2">
                   Candidates to Shortlist *
@@ -241,7 +241,7 @@ const AdminJobCreateScreen = () => {
                 />
               </div>
             </div>
-            
+
             <div className="mb-6">
               <label htmlFor="jobRequirements" className="block text-gray-700 font-medium mb-2">
                 Job Requirements (One per line)
@@ -255,7 +255,7 @@ const AdminJobCreateScreen = () => {
                 rows="4"
               ></textarea>
             </div>
-            
+
             <div className="mb-6">
               <label className="block text-gray-700 font-medium mb-2">
                 Chatbot Questions
@@ -263,7 +263,7 @@ const AdminJobCreateScreen = () => {
               <p className="text-gray-600 mb-3 text-sm">
                 These questions will be asked to candidates during the application process.
               </p>
-              
+
               <ul className="mb-4 space-y-2">
                 {chatbotQuestions.map((q, index) => (
                   <li key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
@@ -283,7 +283,7 @@ const AdminJobCreateScreen = () => {
                   </li>
                 ))}
               </ul>
-              
+
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-grow">
                   <input
@@ -315,7 +315,7 @@ const AdminJobCreateScreen = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="border-t border-gray-200 pt-6 flex justify-end">
               <Link to="/admin/jobs" className="btn btn-ghost border border-gray-300 mr-4">
                 Cancel

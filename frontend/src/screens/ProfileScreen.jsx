@@ -50,7 +50,7 @@ const ProfileScreen = () => {
       setMessage(null);
       dispatch(
         updateUserProfile({
-          id: user._id,
+          id: user.id,
           name,
           email,
           phoneNumber,

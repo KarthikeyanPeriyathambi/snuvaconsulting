@@ -1,5 +1,18 @@
 import llmService from './llmService.js';
 import mammoth from 'mammoth';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Helper for persistent logging
+const debugLog = (msg) => {
+  const logPath = path.join(process.cwd(), 'parser_debug.log');
+  const timestamp = new Date().toISOString();
+  fs.appendFileSync(logPath, `[${timestamp}] ${msg}\n`);
+};
 
 /**
  * Resume Parser - handles PDF, DOCX, and TXT resume parsing with fallbacks
@@ -20,7 +33,7 @@ async function loadPdfParse() {
   if (pdfParseModule !== null) {
     return pdfParseModule;
   }
-  
+
   try {
     // Try different ways to load pdf-parse in ES modules
     try {
@@ -44,7 +57,7 @@ async function loadPdfLib() {
   if (pdfLibModule !== null) {
     return pdfLibModule;
   }
-  
+
   try {
     const module = await import('pdf-lib');
     pdfLibModule = module;
@@ -60,12 +73,12 @@ function extractTextFromBuffer(buffer) {
   try {
     // Try UTF-8 encoding first
     let text = buffer.toString('utf8');
-    
+
     // If the text looks like binary data, try other encodings
     if (text.includes('%PDF-') || text.length < 50) {
       text = buffer.toString('binary');
     }
-    
+
     // Clean up the text
     return text
       .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ')
@@ -90,11 +103,11 @@ class ResumeParser {
   async extractReadableText(buffer, mimeType) {
     try {
       console.log('[Parser] MIME type received:', mimeType);
-      
+
       // Handle different file types
       if (mimeType === 'application/pdf') {
         console.log('[Parser] Processing PDF file with pdf-parse');
-              
+
         try {
           // Load and use pdf-parse for PDF files
           const pdfParseLib = await loadPdfParse();
@@ -104,106 +117,81 @@ class ResumeParser {
           const extractedText = pdfData.text
             .replace(/\s+/g, ' ')
             .trim();
-                  
-          console.log('[Parser] PDF parsed successfully');
-          console.log('[Parser] Extracted text length:', extractedText.length, 'characters');
-          console.log('[Parser] Number of pages:', pdfData.numpages || 'unknown');
-                  
-          if (extractedText.length === 0) {
-            console.warn('[Parser] Warning: No text extracted from PDF');
-          } else {
-            console.log('[Parser] Text preview (first 200 chars):', extractedText.substring(0, 200));
+
+          debugLog(`[PDF] Character Count: ${extractedText.length}`);
+          debugLog(`[PDF] Text Sample: ${extractedText.substring(0, 100)}`);
+
+          if (extractedText.length < 100) {
+            debugLog('[PDF] ⚠️ Warning: Very little text extracted.');
           }
-                  
-          return extractedText;
+
+          return { text: extractedText, source: 'pdf-parse' };
         } catch (pdfError) {
           console.error('[Parser] pdf-parse error:', pdfError.message);
-                
-          // First fallback: try alternative PDF parsing if pdf-lib is available
-          const pdfLib = await loadPdfLib();
-          if (pdfLib && pdfLib.PDFDocument) {
-            console.log('[Parser] Attempting fallback with pdf-lib...');
-            try {
-              const pdfDoc = await pdfLib.PDFDocument.load(buffer);
-              const pages = pdfDoc.getPages();
-              let extractedText = '';
-                        
-              for (const page of pages) {
-                const textContent = await page.getTextContent();
-                extractedText += textContent.items.map(item => item.str).join(' ') + ' ';
-              }
-                        
-              const cleanedText = extractedText
-                .replace(/\s+/g, ' ')
-                .trim();
-                        
-              if (cleanedText.length > 0) {
-                console.log('[Parser] pdf-lib fallback successful, extracted text length:', cleanedText.length);
-                return cleanedText;
-              }
-            } catch (altError) {
-              console.error('[Parser] pdf-lib fallback also failed:', altError.message);
-            }
-          }
-                
+
+          // First fallback: log that pdf-lib isn't actually a text extractor
+          console.warn('[Parser] pdf-lib is not a native text extractor, skipping fallback.');
+
+
           // Second fallback: try to extract text using buffer methods
           console.log('[Parser] Attempting buffer-based text extraction...');
           const text = extractTextFromBuffer(buffer);
-                
+
           if (text.length > 50) {
             console.log('[Parser] Buffer-based extraction successful, extracted text length:', text.length);
-            return text;
+            return { text, source: 'buffer-extraction' };
           }
-                
+
           // Final fallback: return empty string but log the error
           console.error('[Parser] All PDF parsing methods failed, returning empty string');
-          return '';
+          return { text: '', source: 'failed' };
         }
-      } 
+      }
       else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
         console.log('[Parser] Processing DOCX file with mammoth');
-              
+
         try {
           const result = await mammoth.extractRawText({
             buffer: buffer
           });
-                
+
           const extractedText = result.value
             .replace(/\s+/g, ' ')
             .trim();
-                
+
           console.log('[Parser] DOCX parsed successfully, extracted text length:', extractedText.length);
-          return extractedText;
+          return { text: extractedText, source: 'mammoth' };
         } catch (docxError) {
           console.error('[Parser] DOCX parsing error:', docxError.message);
-                
+
           // Fallback for DOCX: try buffer method
           const text = extractTextFromBuffer(buffer);
           if (text.length > 50) {
             console.log('[Parser] DOCX buffer fallback successful, extracted text length:', text.length);
-            return text;
+            return { text, source: 'docx-buffer-fallback' };
           }
-                
-          return '';
+
+          return { text: '', source: 'failed' };
         }
       }
       else if (mimeType === 'text/plain') {
         console.log('[Parser] Processing text file');
-        return buffer.toString('utf-8')
-          .replace(/\s+/g, ' ')
-          .trim();
+        return { 
+          text: buffer.toString('utf-8').replace(/\s+/g, ' ').trim(),
+          source: 'text-plain'
+        };
       }
       else {
         console.log('[Parser] Unsupported file type:', mimeType);
-              
+
         // Try to extract text regardless of MIME type as a last resort
         const text = extractTextFromBuffer(buffer);
         if (text.length > 0) {
           console.log('[Parser] Extracted text from unsupported type, length:', text.length);
-          return text;
+          return { text, source: 'unsupported-type-fallback' };
         }
-              
-        return '';
+
+        return { text: '', source: 'none' };
       }
     } catch (err) {
       console.error('[Parser] Text extraction failed:', err.message);
@@ -217,32 +205,41 @@ class ResumeParser {
    */
   cleanText(text) {
     if (!text) return '';
-    
+
     return text
+      // Remove extreme repetition (common in bad extractions)
+      .replace(/(\W)\1{2,}/g, '$1$1')
       // Remove excessive whitespace
       .replace(/\s+/g, ' ')
-      // Remove null characters and other control characters except line breaks
+      // Remove null characters and control characters
       .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-      // Fix common PDF extraction artifacts
-      .replace(/([a-z])-([a-z])/g, '$1$2') // Remove hyphens in words
-      .replace(/\f/g, '\n') // Replace form feeds with newlines
       .trim();
+
   }
 
   /**
    * Normalize the parsed data from LLM to match our DB schema keys
    */
   normalizeFields(raw) {
-    // Ensure we have default values for all fields
     const normalized = {
       name: raw.name || raw.full_name || raw.fullName || raw['Full Name'] || '',
       email: raw.email || raw.email_address || raw.emailAddress || raw['Email'] || '',
       phone: raw.phone || raw.phone_number || raw.phoneNumber || raw['Phone Number'] || '',
-      skills: Array.isArray(raw.skills) ? raw.skills : (raw.Skills || raw.skill || []),
+      skills: [],
       education: [],
       experience: [],
       projects: []
     };
+
+    // Normalize skills (handle arrays and strings)
+    if (raw.skills || raw.Skills || raw.skill) {
+      const skillsInput = raw.skills || raw.Skills || raw.skill || [];
+      if (Array.isArray(skillsInput)) {
+        normalized.skills = skillsInput;
+      } else if (typeof skillsInput === 'string') {
+        normalized.skills = skillsInput.split(/[,;|]/).map(s => s.trim()).filter(Boolean);
+      }
+    }
 
     // Normalize education
     if (raw.education || raw.Education) {
@@ -287,13 +284,13 @@ class ResumeParser {
    * Validate that we have meaningful extracted text
    */
   validateExtractedText(text) {
-    if (!text || text.length < 50) {
+    if (!text || text.trim().length < 20) {
       return {
         valid: false,
         reason: 'Text too short or empty'
       };
     }
-    
+
     // Check if it looks like PDF binary (contains PDF header)
     if (text.includes('%PDF-') || text.includes('endobj') || text.includes('/Length')) {
       return {
@@ -301,7 +298,7 @@ class ResumeParser {
         reason: 'Text appears to be PDF binary, not extracted content'
       };
     }
-    
+
     // Check if it has reasonable amount of readable text
     const wordCount = text.split(/\s+/).length;
     if (wordCount < 10) {
@@ -310,7 +307,7 @@ class ResumeParser {
         reason: 'Insufficient words extracted'
       };
     }
-    
+
     return { valid: true };
   }
 
@@ -322,25 +319,25 @@ class ResumeParser {
    */
   async process(fileBuffer, resumeUrl, mimeType) {
     console.log('[Parser] === STARTING RESUME PARSING PROCESS ===');
-    
+
     try {
       console.log('[Parser] Step 1: Extracting text from buffer');
       console.log('[Parser] Buffer size:', fileBuffer.length, 'bytes');
       console.log('[Parser] MIME type:', mimeType);
-      
+
       if (!mimeType) {
         console.error('[Parser] ❌ MIME type is undefined');
         throw new Error('MIME type is required for parsing');
       }
-      
-      const rawText = await this.extractReadableText(fileBuffer, mimeType);
-      
+
+      const { text: rawText, source } = await this.extractReadableText(fileBuffer, mimeType);
+      debugLog(`[Process] Extracted from ${source}. Length: ${rawText?.length || 0}`);
+      if (rawText) debugLog(`[Process] Sample: ${rawText.substring(0, 100)}`);
+
       // Validate the extracted text
       const validation = this.validateExtractedText(rawText);
       if (!validation.valid) {
-        console.warn('[Parser] ⚠️ Text validation failed:', validation.reason);
-        console.log('[Parser] Raw text preview:', rawText?.substring(0, 200));
-        
+        console.warn('[Resume Parser] ⚠️ Validation failed:', validation.reason);
         // If validation fails but we have some text, use it anyway
         if (rawText && rawText.length > 50) {
           console.log('[Parser] Using extracted text despite validation warning');
@@ -359,9 +356,9 @@ class ResumeParser {
           };
         }
       }
-      
+
       const resumeText = this.cleanText(rawText);
-      
+
       console.log('[Parser] Step 1 ✅ Text extracted successfully');
       console.log('[Parser] Extracted text length:', resumeText.length, 'characters');
       console.log('[Parser] Text preview (first 500 chars):', resumeText.substring(0, 500));
@@ -385,16 +382,16 @@ class ResumeParser {
       });
 
       console.log('[Parser] === RESUME PARSING PROCESS COMPLETED ===');
-      
+
       return {
         ...parsedResume,
         resumeUrl,
       };
-      
+
     } catch (error) {
       console.error('[Parser] ❌ Error processing resume:', error.message);
       console.error('[Parser] Error stack:', error.stack);
-      
+
       // Return a minimal valid response instead of throwing
       return {
         name: '',

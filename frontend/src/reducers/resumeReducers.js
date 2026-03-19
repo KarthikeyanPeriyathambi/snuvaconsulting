@@ -10,6 +10,14 @@ import {
   RESUME_CHATBOT_RESPONSE_SUCCESS,
   RESUME_CHATBOT_RESPONSE_FAIL,
   RESUME_CHATBOT_RESPONSE_RESET,
+  RESUME_IMPROVE_REQUEST,
+  RESUME_IMPROVE_SUCCESS,
+  RESUME_IMPROVE_FAIL,
+  RESUME_IMPROVE_RESET,
+  RESUME_SAVE_IMPROVED_REQUEST,
+  RESUME_SAVE_IMPROVED_SUCCESS,
+  RESUME_SAVE_IMPROVED_FAIL,
+  RESUME_SAVE_IMPROVED_RESET,
 } from '../constants/resumeConstants';
 
 export const resumeUploadReducer = (state = {}, action) => {
@@ -49,6 +57,36 @@ export const resumeChatbotResponseReducer = (state = {}, action) => {
     case RESUME_CHATBOT_RESPONSE_FAIL:
       return { loading: false, error: action.payload };
     case RESUME_CHATBOT_RESPONSE_RESET:
+      return {};
+    default:
+      return state;
+  }
+};
+
+export const resumeImproveReducer = (state = {}, action) => {
+  switch (action.type) {
+    case RESUME_IMPROVE_REQUEST:
+      return { loading: true };
+    case RESUME_IMPROVE_SUCCESS:
+      return { loading: false, success: true, improvedData: action.payload };
+    case RESUME_IMPROVE_FAIL:
+      return { loading: false, error: action.payload };
+    case RESUME_IMPROVE_RESET:
+      return {};
+    default:
+      return state;
+  }
+};
+
+export const resumeSaveImprovedReducer = (state = {}, action) => {
+  switch (action.type) {
+    case RESUME_SAVE_IMPROVED_REQUEST:
+      return { loading: true };
+    case RESUME_SAVE_IMPROVED_SUCCESS:
+      return { loading: false, success: true, resume: action.payload };
+    case RESUME_SAVE_IMPROVED_FAIL:
+      return { loading: false, error: action.payload };
+    case RESUME_SAVE_IMPROVED_RESET:
       return {};
     default:
       return state;

@@ -131,7 +131,7 @@ export const updateJob = (job) => async (dispatch, getState) => {
       },
     };
 
-    const { data } = await axios.put(`${API_URL}/api/jobs/${job._id}`, job, config);
+    const { data } = await axios.put(`${API_URL}/api/jobs/${job.id}`, job, config);
 
     dispatch({
       type: JOB_UPDATE_SUCCESS,

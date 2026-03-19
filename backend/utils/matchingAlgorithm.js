@@ -17,14 +17,17 @@ class MatchingAlgorithm {
       // Get LLM-based matching score and reasoning
       const llmResult = await llmService.matchResumeToJob(resume, job);
       
-      // Combine the results
+      // Combine the results - we lean towards LLM for the overall score as it's smarter (semantic)
       const finalResult = {
-        matchScore: (thresholdScores.overallScore + llmResult.overallScore) / 2,
-        skillMatchScore: thresholdScores.skillsScore,
-        experienceMatchScore: thresholdScores.experienceScore,
-        educationMatchScore: thresholdScores.educationScore,
+        matchScore: llmResult.overallScore, // Use LLM overall score as primary
+        skillMatchScore: llmResult.skillsScore || thresholdScores.skillsScore,
+        experienceMatchScore: llmResult.experienceScore || thresholdScores.experienceScore,
+        educationMatchScore: llmResult.educationScore || thresholdScores.educationScore,
+        projectsMatchScore: llmResult.projectsScore || 0,
         llmMatchScore: llmResult.overallScore,
-        llmReasoning: llmResult.reasoning
+        llmReasoning: llmResult.feedback || llmResult.reasoning,
+        matchedSkills: llmResult.matchedSkills || [],
+        missingSkills: llmResult.missingSkills || []
       };
       
       return finalResult;

@@ -6,13 +6,13 @@ import { faEnvelope, faPhone, faMapMarkerAlt } from '@fortawesome/free-solid-svg
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  
+
   return (
     <footer className="relative bg-gradient-to-br from-gray-900 to-gray-800 text-gray-300 pt-20 pb-12 overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary-500/50 to-transparent"></div>
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDUwIDAgTCAwIDAgMCA1MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4wMiIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-5"></div>
-      
+
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16">
           <div className="lg:pr-8">
@@ -22,7 +22,7 @@ const Footer = () => {
                   CF
                 </div>
                 <h3 className="text-2xl font-bold text-white bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
-                  CyFuture
+                  SNUVA Consulting LLC
                 </h3>
               </div>
               <p className="text-gray-400 leading-relaxed text-sm">
@@ -44,7 +44,7 @@ const Footer = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="lg:border-l lg:border-gray-800 lg:pl-8">
             <h4 className="text-xl font-semibold text-white mb-6 relative inline-block group">
               For Job Seekers
@@ -77,7 +77,7 @@ const Footer = () => {
               </li>
             </ul>
           </div>
-          
+
           <div className="lg:border-l lg:border-gray-800 lg:pl-8">
             <h4 className="text-xl font-semibold text-white mb-6 relative inline-block group">
               For Employers
@@ -110,7 +110,7 @@ const Footer = () => {
               </li>
             </ul>
           </div>
-          
+
           <div className="lg:border-l lg:border-gray-800 lg:pl-8">
             <h4 className="text-xl font-semibold text-white mb-6 relative inline-block group">
               Contact Us
@@ -125,9 +125,9 @@ const Footer = () => {
                     </div>
                   </div>
                   <span className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
-                    Department of AI and Department of CSE<br />
-                    NIT Surat, Gujarat, India<br />
-                    Pin: 395007
+                    SNUVA Consulting LLC<br />
+                    PO BOX 1364<br />
+                    Dublin, OH 43017
                   </span>
                 </div>
               </li>
@@ -138,8 +138,20 @@ const Footer = () => {
                       <FontAwesomeIcon icon={faPhone} className="text-primary-500" />
                     </div>
                   </div>
-                  <a href="tel:+919660108763" className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
-                    +91 9660108763
+                  <a href="tel:+18885681113" className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
+                    888.568.1113
+                  </a>
+                </div>
+              </li>
+              <li>
+                <div className="flex items-center group hover:bg-gray-800/30 p-3 rounded-lg transition-all duration-300 -mx-3">
+                  <div className="mr-3">
+                    <div className="w-8 h-8 bg-primary-500/10 rounded-lg flex items-center justify-center group-hover:bg-primary-500/20 transition-colors duration-300">
+                      <FontAwesomeIcon icon={faPhone} className="text-primary-500" />
+                    </div>
+                  </div>
+                  <a href="tel:+16143174858" className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
+                    614.317.4858
                   </a>
                 </div>
               </li>
@@ -150,25 +162,25 @@ const Footer = () => {
                       <FontAwesomeIcon icon={faEnvelope} className="text-primary-500" />
                     </div>
                   </div>
-                  <a href="mailto:jainbodhini05@gmail.com" className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
-                    jainbodhini05@gmail.com
+                  <a href="mailto:jobs@snuvaconsulting.com" className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
+                    jobs@snuvaconsulting.com
                   </a>
                 </div>
               </li>
             </ul>
           </div>
         </div>
-        
+
         {/* Bottom bar */}
         <div className="relative mt-16 pt-8 border-t border-gray-800">
           <div className="absolute top-0 left-1/2 transform -translate-x-1/2 px-8 -mt-px">
             <div className="w-24 h-px bg-gradient-to-r from-transparent via-primary-500 to-transparent"></div>
           </div>
-          
+
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-center md:text-left">
               <p className="text-gray-500 text-sm hover:text-gray-400 transition-colors duration-300">
-                &copy; {currentYear} CyFuture. All rights reserved.
+                &copy; {currentYear} SNUVA Consulting LLC. All rights reserved.
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-6">

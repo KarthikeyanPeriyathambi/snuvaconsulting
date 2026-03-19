@@ -76,14 +76,31 @@ const ChatbotScreen = () => {
 
   // Get questions from job or use default ones
   const getQuestions = () => {
+    const baseQuestions = [];
+
+    // Step 2 Part 3 & Step 3: Handle less experience / missing skills
+    if (resume && (resume.eligibility === 'UNDER_QUALIFIED' || resume.matchCategory === 'PARTIAL')) {
+      if (resume.missingSkills && resume.missingSkills.length > 0) {
+        baseQuestions.push({
+          question: `I noticed some gaps in requirements like ${resume.missingSkills.slice(0, 2).join(', ')}. Have you done any courses, certifications, or projects related to these?`,
+          isRequired: true
+        });
+      } else {
+        baseQuestions.push({
+          question: "You seem to have slightly less experience for this role. Can you tell us about any relevant certifications or fast-track learning you've done?",
+          isRequired: true
+        });
+      }
+    }
+
     if (job && job.chatbotQuestions && job.chatbotQuestions.length > 0) {
-      return job.chatbotQuestions;
+      return [...baseQuestions, ...job.chatbotQuestions];
     }
 
     // Default questions if none are provided by the job
     return [
+      ...baseQuestions,
       { question: 'When are you available to start?', isRequired: true },
-      { question: 'Do you have a preferred work location?', isRequired: true },
       { question: 'What are your salary expectations?', isRequired: true },
     ];
   };

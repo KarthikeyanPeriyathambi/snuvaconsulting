@@ -1,6 +1,5 @@
 import asyncHandler from 'express-async-handler';
-import Message from '../models/messageModel.js';
-import Job from '../models/jobModel.js';
+import { User, Job, Application, Message } from '../models/index.js';
 
 // @desc    Send a message to all applicants of a job
 // @route   POST /api/messages/job/:jobId
@@ -13,7 +12,13 @@ const sendMessageToApplicants = asyncHandler(async (req, res) => {
     throw new Error('Please provide subject and content');
   }
 
-  const job = await Job.findById(req.params.jobId);
+  const job = await Job.findByPk(req.params.jobId, {
+    include: [{
+      model: User,
+      as: 'admin',
+      attributes: ['id', 'name'],
+    }],
+  });
 
   if (!job) {
     res.status(404);
@@ -21,26 +26,29 @@ const sendMessageToApplicants = asyncHandler(async (req, res) => {
   }
 
   // Check if the user is the admin who created the job
-  if (job.admin.toString() !== req.user._id.toString()) {
+  if (job.adminId !== req.user.id) {
     res.status(401);
     throw new Error('Not authorized to send messages for this job');
   }
 
-  // Check if there are any applicants
-  if (job.applications.length === 0) {
+  // Get all applications for this job
+  const applications = await Application.findAll({ where: { jobId: job.id } });
+
+  if (applications.length === 0) {
     res.status(400);
     throw new Error('No applicants for this job yet');
   }
 
   // Create recipients array from job applications
-  const recipients = job.applications.map((application) => ({
-    resume: application.resume,
+  const recipients = applications.map((app) => ({
+    resumeId: app.resumeId,
+    read: false,
   }));
 
   // Create message
   const message = await Message.create({
-    sender: req.user._id,
-    job: job._id,
+    senderId: req.user.id,
+    jobId: job.id,
     recipients,
     subject,
     content,
@@ -49,7 +57,7 @@ const sendMessageToApplicants = asyncHandler(async (req, res) => {
 
   res.status(201).json({
     message: 'Message sent successfully',
-    messageId: message._id,
+    messageId: message.id,
     recipientsCount: recipients.length,
   });
 });
@@ -58,7 +66,13 @@ const sendMessageToApplicants = asyncHandler(async (req, res) => {
 // @route   GET /api/messages/job/:jobId
 // @access  Private/Admin
 const getJobMessages = asyncHandler(async (req, res) => {
-  const job = await Job.findById(req.params.jobId);
+  const job = await Job.findByPk(req.params.jobId, {
+    include: [{
+      model: User,
+      as: 'admin',
+      attributes: ['id', 'name'],
+    }],
+  });
 
   if (!job) {
     res.status(404);
@@ -66,13 +80,15 @@ const getJobMessages = asyncHandler(async (req, res) => {
   }
 
   // Check if the user is the admin who created the job
-  if (job.admin.toString() !== req.user._id.toString()) {
+  if (job.adminId !== req.user.id) {
     res.status(401);
     throw new Error('Not authorized to view messages for this job');
   }
 
-  const messages = await Message.find({ job: req.params.jobId })
-    .sort({ createdAt: -1 });
+  const messages = await Message.findAll({
+    where: { jobId: req.params.jobId },
+    order: [['createdAt', 'DESC']],
+  });
 
   res.json(messages);
 });
@@ -81,26 +97,28 @@ const getJobMessages = asyncHandler(async (req, res) => {
 // @route   GET /api/messages/resume/:resumeId
 // @access  Public
 const getResumeMessages = asyncHandler(async (req, res) => {
-  const messages = await Message.find({
-    'recipients.resume': req.params.resumeId,
-  })
-    .populate('sender', 'name companyName')
-    .populate('job', 'title')
-    .sort({ createdAt: -1 });
+  const messages = await Message.findAll({
+    order: [['createdAt', 'DESC']],
+  });
+
+  // Filter messages that contain this resume in recipients
+  const filteredMessages = messages.filter(message => {
+    const recipients = message.recipients || [];
+    return recipients.some(r => r.resumeId === parseInt(req.params.resumeId));
+  });
 
   // Mark messages as read
-  for (const message of messages) {
-    const recipient = message.recipients.find(
-      (r) => r.resume.toString() === req.params.resumeId
-    );
-    
+  for (const message of filteredMessages) {
+    const recipients = message.recipients || [];
+    const recipient = recipients.find(r => r.resumeId === parseInt(req.params.resumeId));
+
     if (recipient && !recipient.read) {
       recipient.read = true;
       await message.save();
     }
   }
 
-  res.json(messages);
+  res.json(filteredMessages);
 });
 
 export { sendMessageToApplicants, getJobMessages, getResumeMessages };

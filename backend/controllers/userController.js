@@ -8,11 +8,11 @@ import generateToken from '../utils/generateToken.js';
 const authUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ where: { email } });
 
   if (user && (await user.matchPassword(password))) {
     res.json({
-      _id: user._id,
+      id: user.id,
       name: user.name,
       email: user.email,
       isAdmin: user.isAdmin,
@@ -20,7 +20,7 @@ const authUser = asyncHandler(async (req, res) => {
       companyLogo: user.companyLogo,
       companyDescription: user.companyDescription,
       phoneNumber: user.phoneNumber,
-      token: generateToken(user._id),
+      token: generateToken(user.id),
     });
   } else {
     res.status(401);
@@ -34,7 +34,7 @@ const authUser = asyncHandler(async (req, res) => {
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, isAdmin, companyName, companyLogo, companyDescription, phoneNumber } = req.body;
 
-  const userExists = await User.findOne({ email });
+  const userExists = await User.findOne({ where: { email } });
 
   if (userExists) {
     res.status(400);
@@ -47,7 +47,7 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     password,
     phoneNumber,
-    isAdmin: !!isAdmin, // Convert to boolean
+    isAdmin: !!isAdmin,
   };
 
   // Only add company fields if user is an admin
@@ -72,7 +72,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   if (user) {
     res.status(201).json({
-      _id: user._id,
+      id: user.id,
       name: user.name,
       email: user.email,
       isAdmin: user.isAdmin,
@@ -80,7 +80,7 @@ const registerUser = asyncHandler(async (req, res) => {
       companyLogo: user.companyLogo,
       companyDescription: user.companyDescription,
       phoneNumber: user.phoneNumber,
-      token: generateToken(user._id),
+      token: generateToken(user.id),
     });
   } else {
     res.status(400);
@@ -92,11 +92,11 @@ const registerUser = asyncHandler(async (req, res) => {
 // @route   GET /api/users/profile
 // @access  Private
 const getUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+  const user = await User.findByPk(req.user.id);
 
   if (user) {
     res.json({
-      _id: user._id,
+      id: user.id,
       name: user.name,
       email: user.email,
       isAdmin: user.isAdmin,
@@ -115,7 +115,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/profile
 // @access  Private
 const updateUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+  const user = await User.findByPk(req.user.id);
 
   if (user) {
     user.name = req.body.name || user.name;
@@ -132,18 +132,18 @@ const updateUserProfile = asyncHandler(async (req, res) => {
       user.companyDescription = req.body.companyDescription || user.companyDescription;
     }
 
-    const updatedUser = await user.save();
+    await user.save();
 
     res.json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      isAdmin: updatedUser.isAdmin,
-      companyName: updatedUser.companyName,
-      companyLogo: updatedUser.companyLogo,
-      companyDescription: updatedUser.companyDescription,
-      phoneNumber: updatedUser.phoneNumber,
-      token: generateToken(updatedUser._id),
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      isAdmin: user.isAdmin,
+      companyName: user.companyName,
+      companyLogo: user.companyLogo,
+      companyDescription: user.companyDescription,
+      phoneNumber: user.phoneNumber,
+      token: generateToken(user.id),
     });
   } else {
     res.status(404);

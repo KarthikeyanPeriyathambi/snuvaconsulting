@@ -14,7 +14,7 @@ import {
   faUsers, faInfoCircle, faPercentage, faSortAmountUp, faSortAmountDown, faPaperPlane, faLink,
   faRobot, faLanguage, faUserCircle, faClipboardList, faCog,
   faSignInAlt, faTimesCircle, faMoneyBillWave, faUserTie, faUpload, faFileAlt, faDownload,
-  faFilePdf, faFileWord
+  faFilePdf, faFileWord, faLightbulb, faRotateRight
 } from '@fortawesome/free-solid-svg-icons'
 
 
@@ -32,7 +32,7 @@ library.add(
   faUsers, faInfoCircle, faPercentage, faSortAmountUp, faSortAmountDown, faPaperPlane, faLink,
   faRobot, faLanguage, faUserCircle, faClipboardList, faCog,
   faSignInAlt, faTimesCircle, faMoneyBillWave, faUserTie, faUpload, faFileAlt, faDownload,
-  faFilePdf, faFileWord
+  faFilePdf, faFileWord, faLightbulb, faRotateRight
 )
 
 
